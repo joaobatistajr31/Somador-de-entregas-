@@ -4,783 +4,159 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerenciador de Taxas de Entrega</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Font Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        @keyframes pulse-ring {
-            0% { transform: scale(0.95); opacity: 0.8; }
-            50% { transform: scale(1.15); opacity: 0.4; }
-            100% { transform: scale(0.95); opacity: 0.8; }
-        }
-        .mic-active {
-            animation: pulse-ring 1.5s infinite ease-in-out;
-        }
-    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col">
-
+<body class="bg-green-950 text-slate-100 min-h-screen flex flex-col font-sans">
     <!-- Header -->
-    <header class="bg-slate-800 border-b border-slate-700 sticky top-0 z-30 shadow-md">
-        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-4">
-            <div class="flex items-center space-x-3">
-                <div class="bg-emerald-500 text-slate-900 p-2.5 rounded-xl font-bold shadow-lg flex items-center justify-center">
-                    <i class="fa-solid fa-motorcycle text-xl"></i>
-                </div>
-                <div>
-                    <h1 class="text-lg font-bold tracking-tight text-white">Entregas Express</h1>
-                    <p class="text-xs text-slate-400">Controle por voz e taxas oficiais</p>
-                </div>
+    <header class="bg-green-900 border-b border-green-800 p-4 sticky top-0 z-50 shadow-md">
+        <div class="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-motorcycle text-emerald-400 text-2xl"></i>
+                <h1 class="text-xl font-bold tracking-wide">Taxas de Entrega</h1>
             </div>
-            
-            <!-- Quick Actions / Date Selector -->
-            <div class="flex items-center gap-3 flex-wrap">
-                <div class="bg-slate-700/60 px-3 py-1.5 rounded-lg border border-slate-600 flex items-center gap-2 text-sm">
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2 bg-green-800/80 px-3 py-1.5 rounded-lg border border-green-700">
                     <i class="fa-regular fa-calendar text-emerald-400"></i>
-                    <label for="dateSelector" class="text-xs text-slate-300 font-medium cursor-pointer">Data:</label>
-                    <input type="date" id="dateSelector" onchange="changeSelectedDate(this.value)" class="bg-slate-800 text-slate-200 text-xs font-medium rounded px-2 py-1 border border-slate-600 focus:outline-none focus:border-emerald-500 cursor-pointer">
+                    <input type="date" id="currentDate" class="bg-transparent text-slate-100 font-medium focus:outline-none cursor-pointer">
                 </div>
-                <button onclick="openWeeklySummaryModal()" class="bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1.5 border border-slate-600">
-                    <i class="fa-solid fa-chart-pie text-emerald-400"></i> Resumo da Semana
-                </button>
-                <button onclick="openHistoryModal()" class="bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1.5 border border-slate-600">
-                    <i class="fa-solid fa-clock-rotate-left text-blue-400"></i> Histórico
+                <button onclick="openHistory()" class="bg-green-800 hover:bg-green-700 text-slate-200 px-3.5 py-1.5 rounded-lg font-medium text-sm transition flex items-center gap-2 border border-green-700">
+                    <i class="fa-solid fa-clock-rotate-left"></i> Histórico
                 </button>
             </div>
         </div>
     </header>
 
     <!-- Main Container -->
-    <main class="max-w-7xl mx-auto px-4 py-6 flex-1 w-full grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <main class="flex-1 max-w-4xl w-full mx-auto p-4 flex flex-col gap-6">
         
-        <!-- Left Column: Voice Command, Summary & Manual Search -->
-        <div class="lg:col-span-1 flex flex-col gap-6">
-            
+        <!-- Controls & Voice & Quick Add -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <!-- Voice Recognition Card -->
-            <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 shadow-lg relative overflow-hidden flex flex-col items-center text-center">
-                <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-blue-500"></div>
-                
-                <h2 class="text-base font-semibold text-white mb-1 flex items-center gap-2">
-                    <i class="fa-solid fa-microphone-lines text-emerald-400"></i> Comando por Voz
-                </h2>
-                <p class="text-xs text-slate-400 mb-6">Ex: <span class="text-slate-200 italic">"acrescentar duas Forquilhinhas"</span> ou <span class="text-slate-200 italic">"adicionar Estreito"</span></p>
-
-                <!-- Mic Button -->
-                <div class="relative my-2">
-                    <div id="micRing" class="absolute -inset-3 rounded-full bg-emerald-500/20 opacity-0 transition-all duration-300"></div>
-                    <button id="micBtn" onclick="toggleSpeechRecognition()" class="relative z-10 w-20 h-20 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white shadow-xl shadow-emerald-900/40 flex items-center justify-center text-2xl transition transform active:scale-95 focus:outline-none">
-                        <i id="micIcon" class="fa-solid fa-microphone"></i>
-                    </button>
+            <div class="bg-green-900/80 border border-green-800 rounded-2xl p-5 flex flex-col items-center justify-center text-center shadow-lg relative overflow-hidden">
+                <div class="absolute -right-6 -bottom-6 text-green-800/30 text-8xl pointer-events-none">
+                    <i class="fa-solid fa-microphone"></i>
                 </div>
-
-                <div id="micStatus" class="mt-4 text-xs font-medium text-slate-400 min-h-[20px]">
-                    Toque no microfone para falar
-                </div>
-
-                <!-- Live Transcript Pill -->
-                <div id="transcriptBox" class="mt-3 w-full bg-slate-900/80 border border-slate-700/80 rounded-xl p-3 text-xs text-slate-300 italic min-h-[44px] flex items-center justify-center text-center hidden">
-                    "<span id="transcriptText"></span>"
-                </div>
+                <h2 class="text-sm font-semibold text-emerald-300 uppercase tracking-wider mb-2">Comando por Voz</h2>
+                <button id="micBtn" onclick="toggleSpeech()" class="w-16 h-16 rounded-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 flex items-center justify-center text-2xl shadow-lg shadow-emerald-500/30 transition transform active:scale-95 mb-3">
+                    <i id="micIcon" class="fa-solid fa-microphone"></i>
+                </button>
+                <p id="speechStatus" class="text-sm text-slate-300 font-medium h-6">Toque para falar (ex: "acrescentar uma Forquilhinha")</p>
             </div>
 
-            <!-- Today's Quick Summary Card -->
-            <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 shadow-lg flex flex-col justify-between">
+            <!-- Manual Quick Search Card -->
+            <div class="bg-green-900/80 border border-green-800 rounded-2xl p-5 flex flex-col justify-between shadow-lg">
                 <div>
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 id="summaryTitle" class="text-sm font-semibold text-slate-200 uppercase tracking-wider">Resumo do Dia</h3>
-                        <span id="todayCountBadge" class="bg-emerald-500/10 text-emerald-400 text-xs font-bold px-2.5 py-1 rounded-full border border-emerald-500/20">0 entregas</span>
-                    </div>
-                    <div class="flex items-baseline justify-between bg-slate-900/60 p-4 rounded-xl border border-slate-700/50 mb-4">
-                        <span class="text-xs text-slate-400 font-medium">Total Arrecadado</span>
-                        <span id="todayTotalDisplay" class="text-2xl font-bold text-emerald-400">R$ 0,00</span>
+                    <h2 class="text-sm font-semibold text-emerald-300 uppercase tracking-wider mb-2">Adição Manual / Busca</h2>
+                    <div class="relative">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400"></i>
+                        <input type="text" id="searchBox" placeholder="Pesquisar bairro ou cidade..." oninput="filterNeighborhoods()" class="w-full bg-green-950 border border-green-800 rounded-xl pl-10 pr-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition">
                     </div>
                 </div>
-
-                <div class="flex gap-2">
-                    <button onclick="clearTodayDeliveries()" class="flex-1 bg-slate-700/60 hover:bg-rose-500/20 hover:text-rose-400 hover:border-rose-500/30 text-slate-300 border border-slate-600 py-2.5 px-3 rounded-xl text-xs font-medium transition flex items-center justify-center gap-1.5">
-                        <i class="fa-solid fa-trash-can"></i> Limpar Data
-                    </button>
-                    <button onclick="exportTodayReport()" class="flex-1 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 py-2.5 px-3 rounded-xl text-xs font-medium transition flex items-center justify-center gap-1.5">
-                        <i class="fa-solid fa-share-nodes"></i> Compartilhar
-                    </button>
+                <div id="searchResults" class="mt-2 max-h-36 overflow-y-auto flex flex-col gap-1 pr-1 hidden custom-scrollbar">
+                    <!-- Populated dynamically -->
+                </div>
+                <div class="mt-3 flex items-center justify-between text-xs text-slate-400">
+                    <span>💡 Digite para filtrar bairros instantaneamente</span>
+                    <button onclick="openCustomModal()" class="text-emerald-400 hover:underline font-medium">Outro valor?</button>
                 </div>
             </div>
+        </div>
 
-            <!-- Manual Search & Add Card -->
-            <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 shadow-lg">
-                <h3 class="text-sm font-semibold text-slate-200 mb-3 flex items-center gap-2">
-                    <i class="fa-solid fa-magnifying-glass text-blue-400"></i> Adição Manual
+        <!-- Daily Summary Cards -->
+        <div class="grid grid-cols-2 gap-4">
+            <div class="bg-green-900/80 border border-green-800 rounded-2xl p-4 flex items-center gap-4 shadow-md">
+                <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-wallet"></i>
+                </div>
+                <div>
+                    <span class="text-xs text-slate-400 uppercase tracking-wider font-medium">Total do Dia</span>
+                    <h2 id="totalAmount" class="text-2xl font-bold text-emerald-400">R$ 0,00</h2>
+                </div>
+            </div>
+            <div class="bg-green-900/80 border border-green-800 rounded-2xl p-4 flex items-center gap-4 shadow-md">
+                <div class="w-12 h-12 rounded-xl bg-blue-500/15 text-blue-400 flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-box"></i>
+                </div>
+                <div>
+                    <span class="text-xs text-slate-400 uppercase tracking-wider font-medium">Total de Entregas</span>
+                    <h2 id="totalCount" class="text-2xl font-bold text-blue-400">0</h2>
+                </div>
+            </div>
+        </div>
+
+        <!-- Today's Deliveries List -->
+        <div class="bg-green-900/80 border border-green-800 rounded-2xl p-5 shadow-lg flex-1 flex flex-col">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-bold text-slate-200 text-lg flex items-center gap-2">
+                    <i class="fa-solid fa-list-check text-emerald-400"></i> Entregas do Dia
                 </h3>
-                
-                <div class="space-y-3">
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">Buscar Bairro / Cidade</label>
-                        <div class="relative">
-                            <input type="text" id="neighborhoodSearch" placeholder="Digite para filtrar (ex: Forquilhinha)..." oninput="filterNeighborhoods()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-emerald-500 transition">
+                <button onclick="clearToday()" class="text-xs text-red-400 hover:text-red-300 font-medium transition flex items-center gap-1">
+                    <i class="fa-solid fa-trash-can"></i> Limpar Dia
+                </button>
+            </div>
+
+            <div id="deliveriesList" class="flex flex-col gap-2.5 overflow-y-auto max-h-[380px] pr-1">
+                <div class="text-center py-10 text-slate-400 flex flex-col items-center gap-2">
+                    <i class="fa-solid fa-folder-open text-3xl"></i>
+                    <p>Nenhuma entrega registrada para esta data.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- History Modal -->
+    <div id="historyModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-green-900 border border-green-800 rounded-3xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="p-5 border-b border-green-800 flex items-center justify-between bg-green-950">
+                <h3 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+                    <i class="fa-solid fa-chart-line text-emerald-400"></i> Histórico de Entregas e Faturamento
+                </h3>
+                <button onclick="closeHistory()" class="w-8 h-8 rounded-full bg-green-800 hover:bg-green-700 flex items-center justify-center text-slate-300 transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <div class="p-5 overflow-y-auto flex-1 flex flex-col gap-6">
+                <!-- Weekly summary box -->
+                <div class="bg-green-950 border border-emerald-500/30 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-lg">
+                            <i class="fa-solid fa-calendar-week"></i>
+                        </div>
+                        <div>
+                            <span class="text-xs text-slate-400 uppercase font-semibold">Resumo da Semana Atual</span>
+                            <h4 id="weekRangeLabel" class="text-sm font-medium text-slate-200">De -- até --</h4>
                         </div>
                     </div>
+                    <div class="text-right">
+                        <span id="weekTotalAmount" class="text-xl font-bold text-emerald-400">R$ 0,00</span>
+                        <p id="weekTotalCount" class="text-xs text-slate-400 font-medium">0 entregas</p>
+                    </div>
+                </div>
 
-                    <div class="max-h-44 overflow-y-auto space-y-1 pr-1 custom-scrollbar" id="neighborhoodList">
+                <!-- History list container -->
+                <div>
+                    <h4 class="text-sm font-semibold text-emerald-300 uppercase tracking-wider mb-3">Dias Anteriores / Registrados</h4>
+                    <div id="historyListContainer" class="flex flex-col gap-3">
                         <!-- Populated by JS -->
                     </div>
                 </div>
             </div>
-
-        </div>
-
-        <!-- Right Column: Deliveries List -->
-        <div class="lg:col-span-2 flex flex-col gap-6">
-            
-            <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 shadow-lg flex-1 flex flex-col">
-                <div class="flex flex-wrap justify-between items-center gap-2 mb-4 pb-3 border-b border-slate-700">
-                    <div>
-                        <h2 id="listTitle" class="text-base font-semibold text-white">Entregas Lançadas</h2>
-                        <p class="text-xs text-slate-400">Lista em tempo real para a data selecionada</p>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <button onclick="addCustomDeliveryModal()" class="bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-semibold px-3.5 py-2 rounded-xl text-xs transition flex items-center gap-1.5 shadow-md">
-                            <i class="fa-solid fa-plus"></i> Novo Valor Personalizado
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Deliveries List Container -->
-                <div class="flex-1 overflow-x-auto min-h-[300px]" id="deliveriesContainer">
-                    <div id="emptyDeliveriesState" class="h-full flex flex-col items-center justify-center text-center py-16 text-slate-500">
-                        <i class="fa-solid fa-receipt text-4xl mb-3 text-slate-600"></i>
-                        <p class="text-sm font-medium text-slate-400">Nenhuma entrega registrada nesta data.</p>
-                        <p class="text-xs text-slate-500 mt-1">Fale no microfone ou selecione um bairro ao lado.</p>
-                    </div>
-                    
-                    <div id="deliveriesList" class="space-y-2.5 hidden">
-                        <!-- Populated via JS -->
-                    </div>
-                </div>
-            </div>
-
-        </div>
-
-    </main>
-
-    <!-- History Modal -->
-    <div id="historyModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
-            <div class="p-4 border-b border-slate-700 flex justify-between items-center bg-slate-800/80">
-                <h3 class="font-semibold text-white flex items-center gap-2">
-                    <i class="fa-solid fa-clock-rotate-left text-blue-400"></i> Histórico de Dias Anteriores
-                </h3>
-                <button onclick="closeHistoryModal()" class="text-slate-400 hover:text-white p-2 rounded-lg transition">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
-            </div>
-            
-            <div class="p-5 overflow-y-auto flex-1 space-y-4" id="historyContentList">
-                <!-- Populated via JS -->
-            </div>
-
-            <div class="p-4 border-t border-slate-700 bg-slate-900/50 flex justify-end">
-                <button onclick="closeHistoryModal()" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-xl text-sm font-medium transition">
-                    Fechar
-                </button>
-            </div>
         </div>
     </div>
 
-    <!-- Weekly Summary Modal -->
-    <div id="weeklyModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-lg w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
-            <div class="p-4 border-b border-slate-700 flex justify-between items-center bg-slate-800/80">
-                <h3 class="font-semibold text-white flex items-center gap-2">
-                    <i class="fa-solid fa-chart-pie text-emerald-400"></i> Resumo da Semana Atual (Últimos 7 Dias)
-                </h3>
-                <button onclick="closeWeeklySummaryModal()" class="text-slate-400 hover:text-white p-2 rounded-lg transition">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
-            </div>
-            
-            <div class="p-5 overflow-y-auto flex-1 space-y-4" id="weeklyContentBody">
-                <!-- Populated via JS -->
-            </div>
-
-            <div class="p-4 border-t border-slate-700 bg-slate-900/50 flex justify-end">
-                <button onclick="closeWeeklySummaryModal()" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-xl text-sm font-medium transition">
-                    Fechar
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Custom Delivery Modal -->
-    <div id="customModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl">
-            <h3 class="text-base font-semibold text-white mb-4 flex items-center gap-2">
-                <i class="fa-solid fa-circle-plus text-emerald-400"></i> Adicionar Entrega Manual
+    <!-- Custom Value Modal -->
+    <div id="customModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-green-900 border border-green-800 rounded-3xl w-full max-w-md p-6 shadow-2xl flex flex-col gap-4">
+            <h3 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+                <i class="fa-solid fa-circle-plus text-emerald-400"></i> Adicionar Entrega Personalizada
             </h3>
-            <form onsubmit="handleCustomSubmit(event)" class="space-y-4">
+            <div class="flex flex-col gap-3">
                 <div>
-                    <label class="block text-xs text-slate-400 mb-1">Nome do Bairro / Local</label>
-                    <input type="text" id="customName" required placeholder="Ex: Bairro Exemplo" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-emerald-500">
-                </div>
-                <div>
-                    <label class="block text-xs text-slate-400 mb-1">Valor da Taxa (R$)</label>
-                    <input type="number" step="0.01" id="customPrice" required placeholder="Ex: 7.00" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-emerald-500">
+                    <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1 block">Nome / Bairro</label>
+                    <input type="text" id="customName" placeholder="Ex: Bairro Especial" class="w-full bg-green-950 border border-green-800 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500">
                 </div>
                 <div>
-                    <label class="block text-xs text-slate-400 mb-1">Quantidade</label>
-                    <input type="number" min="1" value="1" id="customQty" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-emerald-500">
-                </div>
-                <div class="flex justify-end gap-3 pt-2">
-                    <button type="button" onclick="closeCustomModal()" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-xl text-sm font-medium transition">
-                        Cancelar
-                    </button>
-                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-semibold px-4 py-2 rounded-xl text-sm transition">
-                        Adicionar
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Toast Notification -->
-    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-slate-800 border border-emerald-500/40 text-slate-100 px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3">
-        <div class="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
-            <i class="fa-solid fa-check text-sm"></i>
-        </div>
-        <div>
-            <h4 id="toastTitle" class="text-xs font-bold text-white">Sucesso</h4>
-            <p id="toastMessage" class="text-xs text-slate-300">Ação realizada com sucesso.</p>
-        </div>
-    </div>
-
-    <!-- Application Script -->
-    <script>
-        // Database extracted from menus (São José, Florianópolis, Palhoça, Biguaçu)
-        const deliveryTable = [
-            // SÃO JOSÉ & Redondezas
-            { name: "Alto Forquilhinhas", price: 7.00, city: "São José" },
-            { name: "Alto Potecas", price: 7.00, city: "São José" },
-            { name: "Areias", price: 7.00, city: "São José" },
-            { name: "Barreiros", price: 6.00, city: "São José" },
-            { name: "Bela Vista", price: 6.00, city: "São José" },
-            { name: "Bosque das Manobras", price: 6.00, city: "São José" },
-            { name: "Bom Samaritano", price: 9.00, city: "São José" },
-            { name: "Campinas", price: 6.00, city: "São José" },
-            { name: "Ceniro", price: 5.00, city: "São José" },
-            { name: "Centro", price: 5.00, city: "São José" },
-            { name: "Colônia Santana", price: 11.00, city: "São José" },
-            { name: "Distrito Industrial", price: 5.00, city: "São José" },
-            { name: "Fazenda Santo Antônio", price: 5.00, city: "São José" },
-            { name: "Flor de Nápolis", price: 4.00, city: "São José" },
-            { name: "Floresta", price: 5.00, city: "São José" },
-            { name: "Forquilhas", price: 5.00, city: "São José" },
-            { name: "Forquilhinhas", price: 5.00, city: "São José" },
-            { name: "Horto Florestal", price: 6.00, city: "São José" },
-            { name: "Ipiranga", price: 6.00, city: "São José" },
-            { name: "Jardim Botânico", price: 6.00, city: "São José" },
-            { name: "Jardim das Palmeiras", price: 4.00, city: "São José" },
-            { name: "José Nitro", price: 9.00, city: "São José" },
-            { name: "Kobrasol", price: 6.00, city: "São José" },
-            { name: "Lisboa", price: 5.00, city: "São José" },
-            { name: "Los Angeles", price: 5.00, city: "São José" },
-            { name: "Nossa Senhora", price: 5.00, city: "São José" },
-            { name: "Canto", price: 9.00, city: "São José" },
-            { name: "Pedregal", price: 6.00, city: "São José" },
-            { name: "Picadas do Sul", price: 4.00, city: "São José" },
-            { name: "Ponta de Baixo", price: 6.00, city: "São José" },
-            { name: "Portal da Col", price: 5.00, city: "São José" },
-            { name: "Potecas", price: 5.00, city: "São José" },
-            { name: "Praia Comprida", price: 5.00, city: "São José" },
-            { name: "Real Parque", price: 6.00, city: "São José" },
-            { name: "Roçado", price: 5.00, city: "São José" },
-            { name: "San Marino", price: 5.00, city: "São José" },
-            { name: "Santa Tereza", price: 14.00, city: "São José" },
-            { name: "São Luiz", price: 4.00, city: "São José" },
-            { name: "São Pedro de Alcântara", price: 14.00, city: "São José" },
-            { name: "Serraria", price: 9.00, city: "São José" },
-            { name: "Sertão do Maruim", price: 5.00, city: "São José" },
-            { name: "Vila Formosa", price: 5.00, city: "São José" },
-            { name: "Zenaide", price: 5.00, city: "São José" },
-
-            // FLORIANÓPOLIS
-            { name: "Abrão", price: 7.00, city: "Florianópolis" },
-            { name: "Agronômica", price: 14.00, city: "Florianópolis" },
-            { name: "Balneário", price: 9.00, city: "Florianópolis" },
-            { name: "Bom Abrigo", price: 7.00, city: "Florianópolis" },
-            { name: "Canto", price: 9.00, city: "Florianópolis" },
-            { name: "Capoeiras", price: 7.00, city: "Florianópolis" },
-            { name: "Carvoeira", price: 13.00, city: "Florianópolis" },
-            { name: "Centro", price: 12.00, city: "Florianópolis" },
-            { name: "Coloninha", price: 7.00, city: "Florianópolis" },
-            { name: "Coqueiros", price: 7.00, city: "Florianópolis" },
-            { name: "Costeira", price: 16.00, city: "Florianópolis" },
-            { name: "Córrego Grande", price: 14.00, city: "Florianópolis" },
-            { name: "Estreito", price: 9.00, city: "Florianópolis" },
-            { name: "Itacorubi", price: 17.00, city: "Florianópolis" },
-            { name: "Itaguaçu", price: 7.00, city: "Florianópolis" },
-            { name: "Jardim Atlântico", price: 7.00, city: "Florianópolis" },
-            { name: "Jardim Cidade", price: 6.00, city: "Florianópolis" },
-            { name: "José Mendes", price: 13.00, city: "Florianópolis" },
-            { name: "Monte Cristo", price: 6.00, city: "Florianópolis" },
-            { name: "Pantanal", price: 14.00, city: "Florianópolis" },
-            { name: "Saco dos Limões", price: 13.00, city: "Florianópolis" },
-            { name: "Santa Mônica", price: 14.00, city: "Florianópolis" },
-            { name: "Santos Dumont", price: 6.00, city: "Florianópolis" },
-            { name: "Trindade", price: 13.00, city: "Florianópolis" },
-
-            // PALHOÇA
-            { name: "Alto Aririú", price: 10.00, city: "Palhoça" },
-            { name: "Aririú", price: 10.00, city: "Palhoça" },
-            { name: "Aririú da Formiga", price: 11.00, city: "Palhoça" },
-            { name: "Barra do Aririú", price: 11.00, city: "Palhoça" },
-            { name: "Bela Vista", price: 10.00, city: "Palhoça" },
-            { name: "Brejaru", price: 6.00, city: "Palhoça" },
-            { name: "Caminho Novo", price: 10.00, city: "Palhoça" },
-            { name: "Centro", price: 7.00, city: "Palhoça" },
-            { name: "Enseada de Brito", price: 14.00, city: "Palhoça" },
-            { name: "Guarda do Cubatão", price: 14.00, city: "Palhoça" },
-            { name: "Jardim Aquários", price: 6.00, city: "Palhoça" },
-            { name: "Jardim Coqueiros", price: 6.00, city: "Palhoça" },
-            { name: "Jardim Eldorado", price: 6.00, city: "Palhoça" },
-            { name: "Jardim Palmeiras", price: 6.00, city: "Palhoça" },
-            { name: "Madri", price: 9.00, city: "Palhoça" },
-            { name: "Nova Palhoça", price: 11.00, city: "Palhoça" },
-            { name: "Pacheco", price: 11.00, city: "Palhoça" },
-            { name: "Pagani", price: 8.00, city: "Palhoça" },
-            { name: "Passa Vinte", price: 7.00, city: "Palhoça" },
-            { name: "Pedra Branca", price: 7.00, city: "Palhoça" },
-            { name: "Ponte do Imaruim", price: 6.00, city: "Palhoça" },
-            { name: "Praia de Fora", price: 14.00, city: "Palhoça" },
-            { name: "Rio Grande", price: 11.00, city: "Palhoça" },
-            { name: "São Sebastião", price: 10.00, city: "Palhoça" },
-            { name: "Santo Amaro da Imperatriz", price: 14.00, city: "Palhoça" },
-
-            // BIGUAÇU
-            { name: "Antônio Carlos", price: 17.00, city: "Biguaçu" },
-            { name: "Boa Vista", price: 13.00, city: "Biguaçu" },
-            { name: "Bom Viver", price: 10.00, city: "Biguaçu" },
-            { name: "Centro", price: 11.00, city: "Biguaçu" },
-            { name: "Dalmolin", price: 13.00, city: "Biguaçu" },
-            { name: "Deltavile", price: 13.00, city: "Biguaçu" },
-            { name: "Fundos", price: 13.00, city: "Biguaçu" },
-            { name: "Jardim Araucária", price: 9.00, city: "Biguaçu" },
-            { name: "Jardim Janaina", price: 10.00, city: "Biguaçu" },
-            { name: "Jardim Zanellato", price: 10.00, city: "Biguaçu" },
-            { name: "Morar Bem", price: 9.00, city: "Biguaçu" },
-            { name: "Morro da Bina", price: 10.00, city: "Biguaçu" },
-            { name: "Prado", price: 14.00, city: "Biguaçu" },
-            { name: "Praia João Rosa", price: 10.00, city: "Biguaçu" },
-            { name: "Rio Caveiras", price: 10.00, city: "Biguaçu" },
-            { name: "Rússia", price: 16.00, city: "Biguaçu" },
-            { name: "Santa Catarina", price: 17.00, city: "Biguaçu" },
-            { name: "São Roque", price: 17.00, city: "Biguaçu" },
-            { name: "Saudade", price: 13.00, city: "Biguaçu" },
-            { name: "Universitários", price: 13.00, city: "Biguaçu" },
-            { name: "Vendaval", price: 13.00, city: "Biguaçu" }
-        ];
-
-        let appData = JSON.parse(localStorage.getItem('delivery_app_records')) || {};
-        let selectedDateKey = getTodayKey();
-        let isListening = false;
-        let recognition = null;
-
-        function getTodayKey() {
-            const now = new Date();
-            return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const dateInput = document.getElementById('dateSelector');
-            dateInput.value = selectedDateKey;
-            updateDateDisplayLabels();
-            renderNeighborhoodList(deliveryTable);
-            renderTodayDeliveries();
-            initSpeechRecognition();
-        });
-
-        function changeSelectedDate(newDateStr) {
-            if (!newDateStr) return;
-            selectedDateKey = newDateStr;
-            updateDateDisplayLabels();
-            renderTodayDeliveries();
-        }
-
-        function updateDateDisplayLabels() {
-            const [year, month, day] = selectedDateKey.split('-');
-            const formatted = `${day}/${month}/${year}`;
-            document.getElementById('summaryTitle').innerText = `Resumo (${formatted})`;
-            document.getElementById('listTitle').innerText = `Entregas em ${formatted}`;
-        }
-
-        function renderNeighborhoodList(items) {
-            const container = document.getElementById('neighborhoodList');
-            container.innerHTML = '';
-
-            if (items.length === 0) {
-                container.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">Nenhum bairro encontrado.</p>`;
-                return;
-            }
-
-            items.forEach(item => {
-                const div = document.createElement('div');
-                div.className = "flex items-center justify-between p-2.5 bg-slate-900/60 hover:bg-slate-700/60 rounded-xl border border-slate-700/60 transition cursor-pointer group";
-                div.onclick = () => {
-                    addDelivery(item.name, item.price, 1);
-                    const searchInput = document.getElementById('neighborhoodSearch');
-                    searchInput.value = '';
-                    renderNeighborhoodList(deliveryTable);
-                };
-                div.innerHTML = `
-                    <div>
-                        <h4 class="text-xs font-medium text-slate-200 group-hover:text-emerald-400 transition">${item.name}</h4>
-                        <span class="text-[10px] text-slate-400">${item.city}</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="text-xs font-bold text-emerald-400">R$ ${item.price.toFixed(2).replace('.', ',')}</span>
-                        <span class="w-6 h-6 rounded-lg bg-emerald-500/10 group-hover:bg-emerald-500 group-hover:text-slate-950 text-emerald-400 flex items-center justify-center text-xs transition">
-                            <i class="fa-solid fa-plus"></i>
-                        </span>
-                    </div>
-                `;
-                container.appendChild(div);
-            });
-        }
-
-        function filterNeighborhoods() {
-            const query = document.getElementById('neighborhoodSearch').value.toLowerCase().trim();
-            if (!query) {
-                renderNeighborhoodList(deliveryTable);
-                return;
-            }
-            const filtered = deliveryTable.filter(i => i.name.toLowerCase().includes(query) || i.city.toLowerCase().includes(query));
-            renderNeighborhoodList(filtered);
-        }
-
-        function addDelivery(neighborhoodName, price, qty = 1) {
-            if (!appData[selectedDateKey]) {
-                appData[selectedDateKey] = [];
-            }
-
-            appData[selectedDateKey].push({
-                id: Date.now() + Math.random(),
-                name: neighborhoodName,
-                price: price,
-                qty: qty,
-                timestamp: new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})
-            });
-
-            saveData();
-            renderTodayDeliveries();
-            showToast("Entrega Adicionada", `${qty}x ${neighborhoodName}`);
-        }
-
-        function saveData() {
-            localStorage.setItem('delivery_app_records', JSON.stringify(appData));
-        }
-
-        function renderTodayDeliveries() {
-            const records = appData[selectedDateKey] || [];
-            const container = document.getElementById('deliveriesList');
-            const emptyState = document.getElementById('emptyDeliveriesState');
-            const todayCountBadge = document.getElementById('todayCountBadge');
-            const todayTotalDisplay = document.getElementById('todayTotalDisplay');
-
-            todayCountBadge.innerText = `${records.reduce((acc, curr) => acc + curr.qty, 0)} entregas`;
-            const totalVal = records.reduce((acc, curr) => acc + (curr.price * curr.qty), 0);
-            todayTotalDisplay.innerText = `R$ ${totalVal.toFixed(2).replace('.', ',')}`;
-
-            if (records.length === 0) {
-                emptyState.classList.remove('hidden');
-                container.classList.add('hidden');
-                return;
-            }
-
-            emptyState.classList.add('hidden');
-            container.classList.remove('hidden');
-            container.innerHTML = '';
-
-            [...records].reverse().forEach(record => {
-                const row = document.createElement('div');
-                row.className = "flex items-center justify-between p-3.5 bg-slate-900/60 border border-slate-700/60 rounded-xl hover:border-slate-600 transition gap-2";
-                row.innerHTML = `
-                    <div class="flex items-center gap-3 min-w-0 flex-1">
-                        <div class="flex items-center bg-slate-800 border border-slate-700 rounded-xl overflow-hidden shrink-0">
-                            <button onclick="updateDeliveryQty('${selectedDateKey}', ${record.id}, -1)" class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition" title="Diminuir">
-                                <i class="fa-solid fa-minus text-[10px]"></i>
-                            </button>
-                            <span class="w-8 text-center text-xs font-bold text-emerald-400">${record.qty}x</span>
-                            <button onclick="updateDeliveryQty('${selectedDateKey}', ${record.id}, 1)" class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition" title="Aumentar">
-                                <i class="fa-solid fa-plus text-[10px]"></i>
-                            </button>
-                        </div>
-                        <div class="min-w-0 flex-1">
-                            <h4 class="text-xs font-semibold text-white truncate">${record.name}</h4>
-                            <span class="text-[10px] text-slate-400">${record.timestamp} • Unit: R$ ${record.price.toFixed(2).replace('.', ',')}</span>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-3 shrink-0">
-                        <span class="text-sm font-bold text-emerald-400">R$ ${(record.price * record.qty).toFixed(2).replace('.', ',')}</span>
-                        <button onclick="removeDelivery('${selectedDateKey}', ${record.id})" class="text-slate-500 hover:text-rose-400 p-2 rounded-lg transition" title="Remover">
-                            <i class="fa-solid fa-trash-can text-xs"></i>
-                        </button>
-                    </div>
-                `;
-                container.appendChild(row);
-            });
-        }
-
-        function updateDeliveryQty(dateKey, id, delta) {
-            if (appData[dateKey]) {
-                const item = appData[dateKey].find(r => r.id === id);
-                if (item) {
-                    item.qty += delta;
-                    if (item.qty <= 0) {
-                        removeDelivery(dateKey, id);
-                        return;
-                    }
-                    saveData();
-                    renderTodayDeliveries();
-                }
-            }
-        }
-
-        function removeDelivery(dateKey, id) {
-            if (appData[dateKey]) {
-                appData[dateKey] = appData[dateKey].filter(item => item.id !== id);
-                if (appData[dateKey].length === 0) {
-                    delete appData[dateKey];
-                }
-                saveData();
-                renderTodayDeliveries();
-                showToast("Removido", "Registro excluído com sucesso.");
-            }
-        }
-
-        function clearTodayDeliveries() {
-            if (appData[selectedDateKey] && confirm("Deseja realmente limpar todas as entregas desta data?")) {
-                delete appData[selectedDateKey];
-                saveData();
-                renderTodayDeliveries();
-                showToast("Limpo", "Registros apagados.");
-            }
-        }
-
-        function initSpeechRecognition() {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) {
-                document.getElementById('micStatus').innerText = "Voz não suportada neste navegador.";
-                document.getElementById('micBtn').disabled = true;
-                return;
-            }
-
-            recognition = new SpeechRecognition();
-            recognition.lang = 'pt-BR';
-            recognition.continuous = false;
-            recognition.interimResults = true;
-
-            recognition.onstart = () => {
-                isListening = true;
-                document.getElementById('micRing').classList.remove('opacity-0');
-                document.getElementById('micRing').classList.add('mic-active');
-                document.getElementById('micBtn').className = "relative z-10 w-20 h-20 rounded-full bg-gradient-to-tr from-rose-600 to-pink-500 text-white shadow-xl flex items-center justify-center text-2xl transition";
-                document.getElementById('micIcon').className = "fa-solid fa-microphone-slash";
-                document.getElementById('micStatus').innerText = "Ouvindo...";
-                document.getElementById('transcriptBox').classList.remove('hidden');
-                document.getElementById('transcriptText').innerText = "";
-            };
-
-            recognition.onresult = (event) => {
-                let interim = '';
-                let final = '';
-                for (let i = event.resultIndex; i < event.results.length; ++i) {
-                    if (event.results[i].isFinal) final += event.results[i][0].transcript;
-                    else interim += event.results[i][0].transcript;
-                }
-                const spokenText = final || interim;
-                document.getElementById('transcriptText').innerText = spokenText;
-                if (final) processVoiceCommand(final.toLowerCase());
-            };
-
-            recognition.onerror = () => { stopListeningState(); };
-            recognition.onend = () => { stopListeningState(); };
-        }
-
-        function toggleSpeechRecognition() {
-            if (!recognition) return;
-            if (isListening) recognition.stop();
-            else { try { recognition.start(); } catch(e) {} }
-        }
-
-        function stopListeningState() {
-            isListening = false;
-            document.getElementById('micRing').classList.add('opacity-0');
-            document.getElementById('micRing').classList.remove('mic-active');
-            document.getElementById('micBtn').className = "relative z-10 w-20 h-20 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 text-white shadow-xl flex items-center justify-center text-2xl transition";
-            document.getElementById('micIcon').className = "fa-solid fa-microphone";
-            document.getElementById('micStatus').innerText = "Toque no microfone para falar";
-        }
-
-        function processVoiceCommand(text) {
-            let qty = 1;
-            const numberWords = {'um': 1, 'uma': 1, 'dois': 2, 'duas': 2, 'três': 3, 'tres': 3, 'quatro': 4, 'cinco': 5, 'seis': 6, 'sete': 7, 'oito': 8, 'nove': 9, 'dez': 10};
-            const words = text.split(' ');
-            for (let w of words) {
-                if (!isNaN(w)) { qty = parseInt(w); break; }
-                else if (numberWords[w]) { qty = numberWords[w]; break; }
-            }
-
-            let cleanedText = text.replace(/acrescentar|adicionar|colocar|mais|uma|um|duas|dois|três|tres|quatro|cinco|de|para/gi, '').trim();
-            let matchedItem = null;
-            const sortedTable = [...deliveryTable].sort((a,b) => b.name.length - a.name.length);
-            
-            for (let item of sortedTable) {
-                if (text.includes(item.name.toLowerCase())) { matchedItem = item; break; }
-            }
-
-            if (!matchedItem && cleanedText.length > 2) {
-                for (let item of sortedTable) {
-                    if (item.name.toLowerCase().includes(cleanedText) || cleanedText.includes(item.name.toLowerCase())) { matchedItem = item; break; }
-                }
-            }
-
-            if (matchedItem) addDelivery(matchedItem.name, matchedItem.price, qty);
-            else showToast("Não encontrado", `Não reconhecemos o bairro em: "${text}".`);
-        }
-
-        function addCustomDeliveryModal() { document.getElementById('customModal').classList.remove('hidden'); }
-        function closeCustomModal() { document.getElementById('customModal').classList.add('hidden'); }
-        function handleCustomSubmit(e) {
-            e.preventDefault();
-            addDelivery(document.getElementById('customName').value, parseFloat(document.getElementById('customPrice').value), parseInt(document.getElementById('customQty').value));
-            closeCustomModal();
-            e.target.reset();
-            document.getElementById('customQty').value = 1;
-        }
-
-        function openHistoryModal() {
-            const content = document.getElementById('historyContentList');
-            content.innerHTML = '';
-            const dates = Object.keys(appData).sort().reverse();
-
-            if (dates.length === 0) {
-                content.innerHTML = `<p class="text-sm text-slate-400 text-center py-8">Nenhum registro histórico.</p>`;
-                document.getElementById('historyModal').classList.remove('hidden');
-                return;
-            }
-
-            dates.forEach(dateKey => {
-                const records = appData[dateKey];
-                const totalQty = records.reduce((acc, curr) => acc + curr.qty, 0);
-                const totalPrice = records.reduce((acc, curr) => acc + (curr.price * curr.qty), 0);
-                const [year, month, day] = dateKey.split('-');
-
-                const card = document.createElement('div');
-                card.className = "bg-slate-900/80 border border-slate-700/80 rounded-xl p-4 space-y-3";
-                card.innerHTML = `
-                    <div class="flex justify-between items-center pb-2 border-b border-slate-700">
-                        <h4 class="text-sm font-bold text-white"><i class="fa-regular fa-calendar-days text-emerald-400"></i> ${day}/${month}/${year}</h4>
-                        <div class="text-right">
-                            <span class="text-xs font-bold text-emerald-400 block">R$ ${totalPrice.toFixed(2).replace('.', ',')}</span>
-                            <span class="text-[10px] text-slate-400">${totalQty} entregas</span>
-                        </div>
-                    </div>
-                    <div class="space-y-1 max-h-40 overflow-y-auto pr-1">
-                        ${records.map(r => `<div class="flex justify-between items-center text-xs text-slate-300 py-1 border-b border-slate-800 last:border-0"><span><strong>${r.qty}x</strong> ${r.name}</span><span class="text-emerald-400">R$ ${(r.price * r.qty).toFixed(2).replace('.', ',')}</span></div>`).join('')}
-                    </div>
-                `;
-                content.appendChild(card);
-            });
-            document.getElementById('historyModal').classList.remove('hidden');
-        }
-
-        function closeHistoryModal() { document.getElementById('historyModal').classList.add('hidden'); }
-
-        function openWeeklySummaryModal() {
-            const container = document.getElementById('weeklyContentBody');
-            container.innerHTML = '';
-
-            // Calculate last 7 days starting from today or selected date
-            const today = new Date();
-            let totalWeekQty = 0;
-            let totalWeekValue = 0;
-            let daysDataHTML = '';
-
-            for (let i = 0; i < 7; i++) {
-                const d = new Date(today);
-                d.setDate(today.getDate() - i);
-                const year = d.getFullYear();
-                const month = String(d.getMonth() + 1).padStart(2, '0');
-                const day = String(d.getDate()).padStart(2, '0');
-                const dateKey = `${year}-${month}-${day}`;
-                const formattedDate = `${day}/${month}/${year}`;
-
-                const records = appData[dateKey] || [];
-                const dayQty = records.reduce((acc, curr) => acc + curr.qty, 0);
-                const dayVal = records.reduce((acc, curr) => acc + (curr.price * curr.qty), 0);
-
-                totalWeekQty += dayQty;
-                totalWeekValue += dayVal;
-
-                daysDataHTML += `
-                    <div class="flex justify-between items-center py-2.5 border-b border-slate-700/60 last:border-0">
-                        <div>
-                            <span class="text-xs font-medium text-slate-200 block">${formattedDate}</span>
-                            <span class="text-[10px] text-slate-400">${dayQty} entregas</span>
-                        </div>
-                        <span class="text-sm font-bold text-emerald-400">R$ ${dayVal.toFixed(2).replace('.', ',')}</span>
-                    </div>
-                `;
-            }
-
-            container.innerHTML = `
-                <div class="bg-slate-900/80 border border-slate-700 rounded-2xl p-4 mb-4 flex items-center justify-between">
-                    <div>
-                        <span class="text-xs text-slate-400 font-medium block">Total Geral (7 Dias)</span>
-                        <span class="text-2xl font-bold text-emerald-400">R$ ${totalWeekValue.toFixed(2).replace('.', ',')}</span>
-                    </div>
-                    <div class="text-right">
-                        <span class="text-xs text-slate-400 font-medium block">Volume</span>
-                        <span class="text-base font-bold text-white">${totalWeekQty} entregas</span>
-                    </div>
-                </div>
-                <div class="bg-slate-900/50 border border-slate-700/60 rounded-xl p-4 space-y-1">
-                    <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Detalhamento Diário</h4>
-                    ${daysDataHTML}
-                </div>
-            `;
-
-            document.getElementById('weeklyModal').classList.remove('hidden');
-        }
-
-        function closeWeeklySummaryModal() {
-            document.getElementById('weeklyModal').classList.add('hidden');
-        }
-
-        function exportTodayReport() {
-            const records = appData[selectedDateKey] || [];
-            if (records.length === 0) { showToast("Aviso", "Não há entregas nesta data."); return; }
-            const [year, month, day] = selectedDateKey.split('-');
-            let text = `📦 *RELATÓRIO - ${day}/${month}/${year}*\n\n`;
-            records.forEach((r, i) => { text += `${i+1}. ${r.qty}x *${r.name}* - R$ ${(r.price * r.qty).toFixed(2).replace('.', ',')} (${r.timestamp})\n`; });
-            text += `\n📊 *Total:* ${records.reduce((a,c)=>a+c.qty,0)} entregas | *Valor:* R$ ${records.reduce((a,c)=>a+(c.price*c.qty),0).toFixed(2).replace('.', ',')}`;
-            
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(text).then(() => showToast("Copiado!", "Relatório copiado para a área de transferência."));
-            } else {
-                window.prompt("Copie o relatório:", text);
-            }
-        }
-
-        function showToast(title, message) {
-            const toast = document.getElementById('toast');
-            document.getElementById('toastTitle').innerText = title;
-            document.getElementById('toastMessage').innerText = message;
-            toast.classList.remove('translate-y-20', 'opacity-0');
-            setTimeout(() => { toast.classList.add('translate-y-20', 'opacity-0'); }, 3500);
-        }
-    </script>
-</body>
-</html>
+                    <label class="text-xs font-semibold text-slate-30
