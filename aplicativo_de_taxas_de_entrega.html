@@ -159,4 +159,469 @@
                     <input type="text" id="customName" placeholder="Ex: Bairro Especial" class="w-full bg-green-950 border border-green-800 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500">
                 </div>
                 <div>
-                    <label class="text-xs font-semibold text-slate-30
+                    <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1 block">Valor da Taxa (R$)</label>
+                    <input type="number" step="0.01" id="customPrice" placeholder="0.00" class="w-full bg-green-950 border border-green-800 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500">
+                </div>
+            </div>
+            <div class="flex items-center justify-end gap-3 mt-2">
+                <button onclick="closeCustomModal()" class="px-4 py-2 rounded-xl bg-green-800 hover:bg-green-700 text-slate-300 font-medium text-sm transition">Cancelar</button>
+                <button onclick="saveCustomDelivery()" class="px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm transition shadow-lg shadow-emerald-500/20">Adicionar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const deliveryTable = [
+            // SÃO JOSÉ
+            { name: "Alto Forquilhas", price: 7.00, city: "São José" },
+            { name: "Alto Potecas", price: 7.00, city: "São José" },
+            { name: "Areias", price: 7.00, city: "São José" },
+            { name: "Barreiros", price: 6.00, city: "São José" },
+            { name: "Bela Vista", price: 6.00, city: "São José" },
+            { name: "Bosque das Manobras", price: 6.00, city: "São José" },
+            { name: "Bom Samaritano", price: 9.00, city: "São José" },
+            { name: "Campinas", price: 6.00, city: "São José" },
+            { name: "Ceniro", price: 5.00, city: "São José" },
+            { name: "Centro", price: 5.00, city: "São José" },
+            { name: "Colônia Santana", price: 11.00, city: "São José" },
+            { name: "Distrito Industrial", price: 5.00, city: "São José" },
+            { name: "Distrito Santo Antônio", price: 5.00, city: "São José" },
+            { name: "Flor de Nápolis", price: 4.00, city: "São José" },
+            { name: "Floresta", price: 5.00, city: "São José" },
+            { name: "Forquilhas", price: 5.00, city: "São José" },
+            { name: "Forquilhinhas", price: 4.00, city: "São José" },
+            { name: "Horto Florestal", price: 6.00, city: "São José" },
+            { name: "Ipiranga", price: 6.00, city: "São José" },
+            { name: "Jd. Botânico", price: 6.00, city: "São José" },
+            { name: "Jd. Das Palmeiras", price: 4.00, city: "São José" },
+            { name: "José Nitro", price: 9.00, city: "São José" },
+            { name: "Kobrasol", price: 6.00, city: "São José" },
+            { name: "Lisboa", price: 5.00, city: "São José" },
+            { name: "Los Angeles", price: 5.00, city: "São José" },
+            { name: "Nossa Sra.", price: 5.00, city: "São José" },
+            { name: "Pedregal", price: 6.00, city: "São José" },
+            { name: "Picadas do Sul", price: 4.00, city: "São José" },
+            { name: "Ponta de Baixo", price: 6.00, city: "São José" },
+            { name: "Portal da Col.", price: 5.00, city: "São José" },
+            { name: "Potecas", price: 5.00, city: "São José" },
+            { name: "Praia Comprida", price: 5.00, city: "São José" },
+            { name: "Real Parque", price: 6.00, city: "São José" },
+            { name: "Roçado", price: 5.00, city: "São José" },
+            { name: "San Marino", price: 5.00, city: "São José" },
+            { name: "Santa Tereza", price: 14.00, city: "São José" },
+            { name: "São Luiz", price: 4.00, city: "São José" },
+            { name: "São Pedro de Alc.", price: 14.00, city: "São José" },
+            { name: "Serraria", price: 9.00, city: "São José" },
+            { name: "Sertão do Maruim", price: 5.00, city: "São José" },
+            { name: "Vila Formosa", price: 5.00, city: "São José" },
+            { name: "Zenaide", price: 5.00, city: "São José" },
+
+            // FLORIANÓPOLIS
+            { name: "Abraão", price: 7.00, city: "Florianópolis" },
+            { name: "Agronômica", price: 14.00, city: "Florianópolis" },
+            { name: "Balneário", price: 9.00, city: "Florianópolis" },
+            { name: "Bom Abrigo", price: 7.00, city: "Florianópolis" },
+            { name: "Canto", price: 9.00, city: "Florianópolis" },
+            { name: "Capoeiras", price: 7.00, city: "Florianópolis" },
+            { name: "Carvoeira", price: 13.00, city: "Florianópolis" },
+            { name: "Centro", price: 12.00, city: "Florianópolis" },
+            { name: "Coloinha", price: 7.00, city: "Florianópolis" },
+            { name: "Coqueiros", price: 7.00, city: "Florianópolis" },
+            { name: "Costeira", price: 16.00, city: "Florianópolis" },
+            { name: "Córrego Grande", price: 14.00, city: "Florianópolis" },
+            { name: "Estreito", price: 9.00, city: "Florianópolis" },
+            { name: "Itacorubi", price: 17.00, city: "Florianópolis" },
+            { name: "Itaguaçu", price: 7.00, city: "Florianópolis" },
+            { name: "Jd. Atlântico", price: 7.00, city: "Florianópolis" },
+            { name: "Jd. Cidade", price: 6.00, city: "Florianópolis" },
+            { name: "José Mendes", price: 6.00, city: "Florianópolis" },
+            { name: "Monte Cristo", price: 13.00, city: "Florianópolis" },
+            { name: "Pantanal", price: 14.00, city: "Florianópolis" },
+            { name: "Saco dos Limões", price: 13.00, city: "Florianópolis" },
+            { name: "Santa Mônica", price: 14.00, city: "Florianópolis" },
+            { name: "Santos Dumont", price: 6.00, city: "Florianópolis" },
+            { name: "Trindade", price: 13.00, city: "Florianópolis" },
+
+            // PALHOÇA
+            { name: "Alto Aririú", price: 10.00, city: "Palhoça" },
+            { name: "Aririú", price: 10.00, city: "Palhoça" },
+            { name: "Aririú da Formiga", price: 11.00, city: "Palhoça" },
+            { name: "Barra do Aririú", price: 11.00, city: "Palhoça" },
+            { name: "Bela Vista", price: 10.00, city: "Palhoça" },
+            { name: "Brejaru", price: 6.00, city: "Palhoça" },
+            { name: "Caminho Novo", price: 10.00, city: "Palhoça" },
+            { name: "Centro", price: 7.00, city: "Palhoça" },
+            { name: "Enseada de Brito", price: 14.00, city: "Palhoça" },
+            { name: "Pagani", price: 8.00, city: "Palhoça" },
+            { name: "Passa Vinte", price: 7.00, city: "Palhoça" },
+            { name: "Pedra Branca", price: 7.00, city: "Palhoça" },
+            { name: "Praia de Fora", price: 14.00, city: "Palhoça" },
+            { name: "Ponte do Imaruim", price: 6.00, city: "Palhoça" },
+            { name: "Rio Grande", price: 11.00, city: "Palhoça" },
+            { name: "São Sebastião", price: 10.00, city: "Palhoça" },
+            { name: "Guarda do Cub.", price: 14.00, city: "Palhoça" },
+            { name: "Jd. Aquários", price: 6.00, city: "Palhoça" },
+            { name: "Jd. Coqueiros", price: 6.00, city: "Palhoça" },
+            { name: "Jd. Eldorado", price: 6.00, city: "Palhoça" },
+            { name: "Jd. Palmeiras", price: 6.00, city: "Palhoça" },
+            { name: "Madri", price: 9.00, city: "Palhoça" },
+            { name: "Nova Palhoça", price: 11.00, city: "Palhoça" },
+            { name: "Pacheco", price: 11.00, city: "Palhoça" },
+            { name: "Sto. Amaro", price: 14.00, city: "Palhoça" },
+
+            // BIGUAÇU
+            { name: "Antônio Carlos", price: 17.00, city: "Biguaçu" },
+            { name: "Boa Vista", price: 13.00, city: "Biguaçu" },
+            { name: "Bom Viver", price: 10.00, city: "Biguaçu" },
+            { name: "Centro", price: 11.00, city: "Biguaçu" },
+            { name: "Dalmolin", price: 13.00, city: "Biguaçu" },
+            { name: "Deltavile", price: 13.00, city: "Biguaçu" },
+            { name: "Fundos", price: 13.00, city: "Biguaçu" },
+            { name: "Jd. Araucária", price: 9.00, city: "Biguaçu" },
+            { name: "Jd. Janaina", price: 10.00, city: "Biguaçu" },
+            { name: "Jd. Zanellato", price: 10.00, city: "Biguaçu" },
+            { name: "Morar Bem", price: 9.00, city: "Biguaçu" },
+            { name: "Morro da Bina", price: 10.00, city: "Biguaçu" },
+            { name: "Prado", price: 14.00, city: "Biguaçu" },
+            { name: "P. João Rosa", price: 10.00, city: "Biguaçu" },
+            { name: "Rio Caveiras", price: 10.00, city: "Biguaçu" },
+            { name: "Rússia", price: 16.00, city: "Biguaçu" },
+            { name: "Santa Catarina", price: 17.00, city: "Biguaçu" },
+            { name: "São Roque", price: 17.00, city: "Biguaçu" },
+            { name: "Saudade", price: 13.00, city: "Biguaçu" },
+            { name: "Universitários", price: 13.00, city: "Biguaçu" },
+            { name: "Vendaval", price: 13.00, city: "Biguaçu" }
+        ];
+
+        let selectedDateStr = getLocalDateString(new Date());
+        
+        function getLocalDateString(date) {
+            const offset = date.getTimezoneOffset();
+            const adjustedDate = new Date(date.getTime() - (offset*60*1000));
+            return adjustedDate.toISOString().split('T')[0];
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const dateInput = document.getElementById('currentDate');
+            dateInput.value = selectedDateStr;
+            dateInput.addEventListener('change', (e) => {
+                selectedDateStr = e.target.value;
+                renderDeliveries();
+            });
+            renderDeliveries();
+        });
+
+        function getData() {
+            const dataStr = localStorage.getItem('delivery_app_data');
+            if (!dataStr) return {};
+            try { return JSON.parse(dataStr); } catch(e) { return {}; }
+        }
+
+        function saveData(data) {
+            localStorage.setItem('delivery_app_data', JSON.stringify(data));
+        }
+
+        function addDelivery(name, price, countToAdd = 1) {
+            const data = getData();
+            if (!data[selectedDateStr]) {
+                data[selectedDateStr] = [];
+            }
+            const existing = data[selectedDateStr].find(item => item.name.toLowerCase() === name.toLowerCase());
+            if (existing) {
+                existing.count += countToAdd;
+                if (existing.count <= 0) {
+                    data[selectedDateStr] = data[selectedDateStr].filter(item => item.name.toLowerCase() !== name.toLowerCase());
+                }
+            } else if (countToAdd > 0) {
+                data[selectedDateStr].push({ name, price, count: countToAdd });
+            }
+            saveData(data);
+            renderDeliveries();
+        }
+
+        function changeCount(name, delta) {
+            const data = getData();
+            if (!data[selectedDateStr]) return;
+            const existing = data[selectedDateStr].find(item => item.name.toLowerCase() === name.toLowerCase());
+            if (existing) {
+                existing.count += delta;
+                if (existing.count <= 0) {
+                    data[selectedDateStr] = data[selectedDateStr].filter(item => item.name.toLowerCase() !== name.toLowerCase());
+                }
+                saveData(data);
+                renderDeliveries();
+            }
+        }
+
+        function clearToday() {
+            if (!confirm("Deseja realmente limpar todas as entregas desta data?")) return;
+            const data = getData();
+            delete data[selectedDateStr];
+            saveData(data);
+            renderDeliveries();
+        }
+
+        function renderDeliveries() {
+            const data = getData();
+            const list = data[selectedDateStr] || [];
+            const container = document.getElementById('deliveriesList');
+            
+            let totalAmount = 0;
+            let totalCount = 0;
+
+            if (list.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-10 text-slate-400 flex flex-col items-center gap-2">
+                        <i class="fa-solid fa-folder-open text-3xl"></i>
+                        <p>Nenhuma entrega registrada para esta data.</p>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = list.map(item => {
+                    totalAmount += (item.price * item.count);
+                    totalCount += item.count;
+                    return `
+                        <div class="bg-green-950 border border-green-800/60 rounded-xl p-3 flex items-center justify-between gap-3">
+                            <div>
+                                <h4 class="font-semibold text-slate-100">${item.name}</h4>
+                                <span class="text-xs text-slate-400">R$ ${item.price.toFixed(2)} cada</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="flex items-center bg-green-900 border border-green-800 rounded-lg overflow-hidden">
+                                    <button onclick="changeCount('${item.name.replace(/'/g, "\\'")}', -1)" class="px-2.5 py-1 text-slate-400 hover:text-white hover:bg-green-800 transition">
+                                        <i class="fa-solid fa-minus text-xs"></i>
+                                    </button>
+                                    <span class="px-3 text-sm font-bold text-emerald-400">${item.count}</span>
+                                    <button onclick="changeCount('${item.name.replace(/'/g, "\\'")}', 1)" class="px-2.5 py-1 text-slate-400 hover:text-white hover:bg-green-800 transition">
+                                        <i class="fa-solid fa-plus text-xs"></i>
+                                    </button>
+                                </div>
+                                <span class="font-bold text-slate-200 min-w-[70px] text-right">R$ ${(item.price * item.count).toFixed(2)}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            document.getElementById('totalAmount').innerText = `R$ ${totalAmount.toFixed(2)}`;
+            document.getElementById('totalCount').innerText = totalCount;
+        }
+
+        function filterNeighborhoods() {
+            const query = document.getElementById('searchBox').value.toLowerCase().trim();
+            const resultsContainer = document.getElementById('searchResults');
+            
+            if (!query) {
+                resultsContainer.classList.add('hidden');
+                resultsContainer.innerHTML = '';
+                return;
+            }
+
+            const matches = deliveryTable.filter(item => item.name.toLowerCase().includes(query) || item.city.toLowerCase().includes(query)).slice(0, 6);
+
+            if (matches.length === 0) {
+                resultsContainer.innerHTML = `<div class="p-2.5 text-xs text-slate-400 text-center">Nenhum bairro encontrado. <button onclick="openCustomModal()" class="text-emerald-400 underline">Criar personalizado</button></div>`;
+                resultsContainer.classList.remove('hidden');
+                return;
+            }
+
+            resultsContainer.innerHTML = matches.map(m => `
+                <button onclick="selectNeighborhood('${m.name.replace(/'/g, "\\'")}', ${m.price})" class="w-full text-left px-3 py-2 rounded-lg bg-green-950 hover:bg-green-800 flex items-center justify-between text-sm transition border border-green-800/50">
+                    <span class="font-medium text-slate-200">${m.name} <span class="text-xs text-slate-400">(${m.city})</span></span>
+                    <span class="font-bold text-emerald-400">R$ ${m.price.toFixed(2)}</span>
+                </button>
+            `).join('');
+            resultsContainer.classList.remove('hidden');
+        }
+
+        function selectNeighborhood(name, price) {
+            addDelivery(name, price, 1);
+            document.getElementById('searchBox').value = '';
+            document.getElementById('searchResults').classList.add('hidden');
+            document.getElementById('searchResults').innerHTML = '';
+        }
+
+        function openCustomModal() {
+            document.getElementById('customName').value = '';
+            document.getElementById('customPrice').value = '';
+            document.getElementById('customModal').classList.remove('hidden');
+        }
+        function closeCustomModal() {
+            document.getElementById('customModal').classList.add('hidden');
+        }
+        function saveCustomDelivery() {
+            const name = document.getElementById('customName').value.trim();
+            const price = parseFloat(document.getElementById('customPrice').value);
+            if (!name || isNaN(price) || price < 0) {
+                alert("Por favor, insira um nome válido e um valor numérico.");
+                return;
+            }
+            addDelivery(name, price, 1);
+            closeCustomModal();
+        }
+
+        function openHistory() {
+            const data = getData();
+            const container = document.getElementById('historyListContainer');
+            const dates = Object.keys(data).sort().reverse();
+
+            let weekTotalAmount = 0;
+            let weekTotalCount = 0;
+            
+            const now = new Date();
+            const currentDayOfWeek = now.getDay();
+            const mondayOffset = currentDayOfWeek === 0 ? -6 : 1 - currentDayOfWeek;
+            const monday = new Date(now);
+            monday.setDate(now.getDate() + mondayOffset);
+            monday.setHours(0,0,0,0);
+
+            const sunday = new Date(monday);
+            sunday.setDate(monday.getDate() + 6);
+            sunday.setHours(23,59,59,999);
+
+            document.getElementById('weekRangeLabel').innerText = `${monday.toLocaleDateString('pt-BR')} até ${sunday.toLocaleDateString('pt-BR')}`;
+
+            dates.forEach(dateStr => {
+                const itemDate = new Date(dateStr + 'T00:00:00');
+                if (itemDate >= monday && itemDate <= sunday) {
+                    data[dateStr].forEach(item => {
+                        weekTotalAmount += (item.price * item.count);
+                        weekTotalCount += item.count;
+                    });
+                }
+            });
+
+            document.getElementById('weekTotalAmount').innerText = `R$ ${weekTotalAmount.toFixed(2)}`;
+            document.getElementById('weekTotalCount').innerText = `${weekTotalCount} entregas`;
+
+            if (dates.length === 0) {
+                container.innerHTML = `<p class="text-slate-400 text-sm text-center py-4">Nenhum histórico registrado.</p>`;
+            } else {
+                container.innerHTML = dates.map(dateStr => {
+                    const list = data[dateStr];
+                    let dayAmount = 0;
+                    let dayCount = 0;
+                    list.forEach(i => {
+                        dayAmount += (i.price * i.count);
+                        dayCount += i.count;
+                    });
+                    
+                    const formattedDate = new Date(dateStr + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' });
+
+                    return `
+                        <div class="bg-green-950 border border-green-800 rounded-xl p-4 flex flex-col gap-3">
+                            <div class="flex items-center justify-between border-b border-green-900 pb-2">
+                                <span class="font-bold text-emerald-400 capitalize">${formattedDate}</span>
+                                <div class="text-right">
+                                    <span class="font-bold text-slate-100">R$ ${dayAmount.toFixed(2)}</span>
+                                    <span class="text-xs text-slate-400 ml-2">(${dayCount} entregas)</span>
+                                </div>
+                            </div>
+                            <div class="flex flex-wrap gap-1.5">
+                                ${list.map(i => `<span class="bg-green-900 text-slate-300 text-xs px-2.5 py-1 rounded-lg border border-green-800">${i.name} (${i.count}x)</span>`).join('')}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            document.getElementById('historyModal').classList.remove('hidden');
+        }
+
+        function closeHistory() {
+            document.getElementById('historyModal').classList.add('hidden');
+        }
+
+        let recognition = null;
+        let isListening = false;
+
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.lang = 'pt-BR';
+            recognition.continuous = false;
+            recognition.interimResults = false;
+
+            recognition.onstart = () => {
+                isListening = true;
+                document.getElementById('micBtn').classList.add('bg-red-500', 'animate-pulse');
+                document.getElementById('micBtn').classList.remove('bg-emerald-500');
+                document.getElementById('speechStatus').innerText = "Ouvindo... Fale o comando";
+            };
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript.toLowerCase();
+                document.getElementById('speechStatus').innerText = `Você disse: "${transcript}"`;
+                processVoiceCommand(transcript);
+            };
+
+            recognition.onerror = () => {
+                stopSpeech();
+                document.getElementById('speechStatus').innerText = "Erro ao ouvir. Tente novamente.";
+            };
+
+            recognition.onend = () => {
+                stopSpeech();
+            };
+        } else {
+            document.getElementById('speechStatus').innerText = "Reconhecimento de voz não suportado neste navegador.";
+            document.getElementById('micBtn').disabled = true;
+        }
+
+        function toggleSpeech() {
+            if (!recognition) return;
+            if (isListening) {
+                recognition.stop();
+            } else {
+                recognition.start();
+            }
+        }
+
+        function stopSpeech() {
+            isListening = false;
+            const btn = document.getElementById('micBtn');
+            btn.classList.remove('bg-red-500', 'animate-pulse');
+            btn.classList.add('bg-emerald-500');
+        }
+
+        function processVoiceCommand(text) {
+            let count = 1;
+            const numberWords = {
+                'uma': 1, 'um': 1, '1': 1,
+                'duas': 2, 'dois': 2, '2': 2,
+                'três': 3, '3': 3,
+                'quatro': 4, '4': 4,
+                'cinco': 5, '5': 5
+            };
+
+            for (let word in numberWords) {
+                if (text.includes(word)) {
+                    count = numberWords[word];
+                    break;
+                }
+            }
+
+            let cleaned = text
+                .replace(/acrescentar|adicionar|mais|uma|um|duas|dois|três|quatro|cinco/gi, '')
+                .trim();
+
+            if (!cleaned) {
+                document.getElementById('speechStatus').innerText = "Não entendi o bairro. Tente novamente.";
+                return;
+            }
+
+            let match = deliveryTable.find(item => item.name.toLowerCase() === cleaned);
+            if (!match) {
+                match = deliveryTable.find(item => item.name.toLowerCase().includes(cleaned) || cleaned.includes(item.name.toLowerCase()));
+            }
+
+            if (match) {
+                addDelivery(match.name, match.price, count);
+                document.getElementById('speechStatus').innerText = `Adicionado: ${count}x ${match.name} (R$ ${match.price.toFixed(2)})`;
+            } else {
+                document.getElementById('speechStatus').innerText = `Bairro "${cleaned}" não encontrado na tabela.`;
+            }
+        }
+    </script>
+</body>
+</html>
