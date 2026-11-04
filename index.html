@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taxas de Entrega JC</title>
+    <link rel="manifest" href="manifest.json">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-green-950 text-slate-100 min-h-screen flex flex-col font-sans select-none">
+    <!-- Header -->
+    <header class="bg-green-900 border-b border-green-800 p-4 sticky top-0 z-50 shadow-md">
+        <div class="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-motorcycle text-emerald-400 text-2xl"></i>
+                <h1 class="text-xl font-bold tracking-wide">Taxas de Entrega JC</h1>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2 bg-green-800/80 px-3 py-1.5 rounded-lg border border-green-700">
+                    <i class="fa-regular fa-calendar text-emerald-400"></i>
+                    <input type="date" id="currentDate" class="bg-transparent text-slate-100 font-medium focus:outline-none cursor-pointer">
+                </div>
+                <button onclick="openHistory()" class="bg-green-800 hover:bg-green-700 active:bg-green-600 text-slate-200 px-3.5 py-1.5 rounded-lg font-medium text-sm transition flex items-center gap-2 border border-green-700">
+                    <i class="fa-solid fa-clock-rotate-left"></i> Histórico
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-4xl w-full mx-auto p-4 flex flex-col gap-6">
+        
+        <!-- Controls & Voice & Quick Add -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Voice Recognition Card -->
+            <div class="bg-green-900/80 border border-green-800 rounded-2xl p-5 flex flex-col items-center justify-center text-center shadow-lg relative overflow-hidden">
+                <div class="absolute -right-6 -bottom-6 text-green-800/30 text-8xl pointer-events-none">
+                    <i class="fa-solid fa-microphone"></i>
+                </div>
+                <h2 class="text-sm font-semibold text-emerald-300 uppercase tracking-wider mb-2">Comando por Voz</h2>
+                <button id="micBtn" onclick="toggleSpeech()" class="w-16 h-16 rounded-full bg-emerald-500 hover:bg-emerald-400 active:scale-90 text-slate-950 flex items-center justify-center text-2xl shadow-lg shadow-emerald-500/30 transition transform mb-3">
+                    <i id="micIcon" class="fa-solid fa-microphone"></i>
+                </button>
+                <p id="speechStatus" class="text-sm text-slate-300 font-medium h-6">Toque para falar (ex: "uma Forquilhinha")</p>
+            </div>
+
+            <!-- Manual Quick Search Card -->
+            <div class="bg-green-900/80 border border-green-800 rounded-2xl p-5 flex flex-col justify-between shadow-lg">
+                <div>
+                    <h2 class="text-sm font-semibold text-emerald-300 uppercase tracking-wider mb-2">Adição Manual / Busca</h2>
+                    <div class="relative">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400"></i>
+                        <input type="text" id="searchBox" placeholder="Pesquisar bairro ou cidade..." oninput="filterNeighborhoods()" class="w-full bg-green-950 border border-green-800 rounded-xl pl-10 pr-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition">
+                    </div>
+                </div>
+                <div id="searchResults" class="mt-2 max-h-36 overflow-y-auto flex flex-col gap-1 pr-1 hidden custom-scrollbar"></div>
+                <div class="mt-3 flex items-center justify-between text-xs text-slate-400">
+                    <span>💡 Digite para filtrar bairros instantaneamente</span>
+                    <button onclick="openCustomModal()" class="text-emerald-400 hover:underline font-medium">Outro valor?</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Daily Summary Cards -->
+        <div class="grid grid-cols-2 gap-4">
+            <div class="bg-green-900/80 border border-green-800 rounded-2xl p-4 flex items-center gap-4 shadow-md">
+                <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-wallet"></i>
+                </div>
+                <div>
+                    <span class="text-xs text-slate-400 uppercase tracking-wider font-medium">Total do Dia</span>
+                    <h2 id="totalAmount" class="text-2xl font-bold text-emerald-400">R$ 0,00</h2>
+                </div>
+            </div>
+            <div class="bg-green-900/80 border border-green-800 rounded-2xl p-4 flex items-center gap-4 shadow-md">
+                <div class="w-12 h-12 rounded-xl bg-blue-500/15 text-blue-400 flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-box"></i>
+                </div>
+                <div>
+                    <span class="text-xs text-slate-400 uppercase tracking-wider font-medium">Total de Entregas</span>
+                    <h2 id="totalCount" class="text-2xl font-bold text-blue-400">0</h2>
+                </div>
+            </div>
+        </div>
+
+        <!-- Today's Deliveries List -->
+        <div class="bg-green-900/80 border border-green-800 rounded-2xl p-5 shadow-lg flex-1 flex flex-col">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-bold text-slate-200 text-lg flex items-center gap-2">
+                    <i class="fa-solid fa-list-check text-emerald-400"></i> Entregas do Dia
+                </h3>
+                <button onclick="clearToday()" class="text-xs text-red-400 hover:text-red-300 font-medium transition flex items-center gap-1">
+                    <i class="fa-solid fa-trash-can"></i> Limpar Dia
+                </button>
+            </div>
+
+            <div id="deliveriesList" class="flex flex-col gap-2.5 overflow-y-auto max-h-[380px] pr-1">
+                <div class="text-center py-10 text-slate-400 flex flex-col items-center gap-2">
+                    <i class="fa-solid fa-folder-open text-3xl"></i>
+                    <p>Nenhuma entrega registrada para esta data.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- History Modal -->
+    <div id="historyModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-green-900 border border-green-800 rounded-3xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="p-5 border-b border-green-800 flex items-center justify-between bg-green-950">
+                <h3 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+                    <i class="fa-solid fa-chart-line text-emerald-400"></i> Histórico de Entregas e Faturamento
+                </h3>
+                <button onclick="closeHistory()" class="w-8 h-8 rounded-full bg-green-800 hover:bg-green-700 flex items-center justify-center text-slate-300 transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <div class="p-5 overflow-y-auto flex-1 flex flex-col gap-6">
+                <div class="bg-green-950 border border-emerald-500/30 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-lg">
+                            <i class="fa-solid fa-calendar-week"></i>
+                        </div>
+                        <div>
+                            <span class="text-xs text-slate-400 uppercase font-semibold">Resumo da Semana Atual</span>
+                            <h4 id="weekRangeLabel" class="text-sm font-medium text-slate-200">De -- até --</h4>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span id="weekTotalAmount" class="text-xl font-bold text-emerald-400">R$ 0,00</span>
+                        <p id="weekTotalCount" class="text-xs text-slate-400 font-medium">0 entregas</p>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="text-sm font-semibold text-emerald-300 uppercase tracking-wider mb-3">Dias Anteriores / Registrados</h4>
+                    <div id="historyListContainer" class="flex flex-col gap-3"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Value Modal -->
+    <div id="customModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-green-900 border border-green-800 rounded-3xl w-full max-w-md p-6 shadow-2xl flex flex-col gap-4">
+            <h3 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+                <i class="fa-solid fa-circle-plus text-emerald-400"></i> Adicionar Entrega Personalizada
+            </h3>
+            <div class="flex flex-col gap-3">
+                <div>
+                    <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1 block">Nome / Bairro</label>
+                    <input type="text" id="customName" placeholder="Ex: Bairro Especial" class="w-full bg-green-950 border border-green-800 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500">
+                </div>
+                <div>
+                    <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1 block">Valor da Taxa (R$)</label>
+                    <input type="number" step="0.01" id="customPrice" placeholder="0.00" class="w-full bg-green-950 border border-green-800 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500">
+                </div>
+            </div>
+            <div class="flex items-center justify-end gap-3 mt-2">
+                <button onclick="closeCustomModal()" class="px-4 py-2 rounded-xl bg-green-800 hover:bg-green-700 text-slate-300 font-medium text-sm transition">Cancelar</button>
+                <button onclick="saveCustomDelivery()" class="px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm transition shadow-lg shadow-emerald-500/20">Adicionar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const deliveryTable = [
+            { name: "Alto Forquilhas", price: 7.00, city: "São José" },
+            { name: "Alto Potecas", price: 7.00, city: "São José" },
+            { name: "Areias", price: 7.00, city: "São José" },
+            { name: "Barreiros", price: 6.00, city: "São José" },
+            { name: "Bela Vista", price: 6.00, city: "São José" },
+            { name: "Bosque das Manobras", price: 6.00, city: "São José" },
+            { name: "Bom Samaritano", price: 9.00, city: "São José" },
+            { name: "Campinas", price: 6.00, city: "São José" },
+            { name: "Ceniro", price: 5.00, city: "São José" },
+            { name: "Centro", price: 5.00, city: "São José" },
+            { name: "Colônia Santana", price: 11.00, city: "São José" },
+            { name: "Distrito Industrial", price: 5.00, city: "São José" },
+            { name: "Distrito Santo Antônio", price: 5.00, city: "São José" },
+            { name: "Flor de Nápolis", price: 4.00, city: "São José" },
+            { name: "Floresta", price: 5.00, city: "São José" },
+            { name: "Forquilhas", price: 5.00, city: "São José" },
+            { name: "Forquilhinhas", price: 4.00, city: "São José" },
+            { name: "Horto Florestal", price: 6.00, city: "São José" },
+            { name: "Ipiranga", price: 6.00, city: "São José" },
+            { name: "Jd. Botânico", price: 6.00, city: "São José" },
+            { name: "Jd. Das Palmeiras", price: 4.00, city: "São José" },
+            { name: "José Nitro", price: 9.00, city: "São José" },
+            { name: "Kobrasol", price: 6.00, city: "São José" },
+            { name: "Lisboa", price: 5.00, city: "São José" },
+            { name: "Los Angeles", price: 5.00, city: "São José" },
+            { name: "Nossa Sra.", price: 5.00, city: "São José" },
+            { name: "Pedregal", price: 6.00, city: "São José" },
+            { name: "Picadas do Sul", price: 4.00, city: "São José" },
+            { name: "Ponta de Baixo", price: 6.00, city: "São José" },
+            { name: "Portal da Col.", price: 5.00, city: "São José" },
+            { name: "Potecas", price: 5.00, city: "São José" },
+            { name: "Praia Comprida", price: 5.00, city: "São José" },
+            { name: "Real Parque", price: 6.00, city: "São José" },
+            { name: "Roçado", price: 5.00, city: "São José" },
+            { name: "San Marino", price: 5.00, city: "São José" },
+            { name: "Santa Tereza", price: 14.00, city: "São José" },
+            { name: "São Luiz", price: 4.00, city: "São José" },
+            { name: "São Pedro de Alc.", price: 14.00, city: "São José" },
+            { name: "Serraria", price: 9.00, city: "São José" },
+            { name: "Sertão do Maruim", price: 5.00, city: "São José" },
+            { name: "Vila Formosa", price: 5.00, city: "São José" },
+            { name: "Zenaide", price: 5.00, city: "São José" },
+            { name: "Abraão", price: 7.00, city: "Florianópolis" },
+            { name: "Agronômica", price: 14.00, city: "Florianópolis" },
+            { name: "Balneário", price: 9.00, city: "Florianópolis" },
+            { name: "Bom Abrigo", price: 7.00, city: "Florianópolis" },
+            { name: "Canto", price: 9.00, city: "Florianópolis" },
+            { name: "Capoeiras", price: 7.00, city: "Florianópolis" },
+            { name: "Carvoeira",
