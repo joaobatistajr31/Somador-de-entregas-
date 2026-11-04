@@ -15,19 +15,16 @@
         input[type="text"], input[type="number"], input[type="date"] { width: 100%; background-color: #022c22; border: 1px solid #065f46; border-radius: 10px; padding: 12px; color: #f1f5f9; outline: none; }
         input:focus { border-color: #10b981; }
         button { cursor: pointer; border: none; transition: 0.2s; }
-        .btn-primary { background-color: #10b981; color: #022c22; font-weight: bold; border-radius: 10px; padding: 10px 20px; }
-        .btn-primary:active { transform: scale(0.95); }
-        .btn-secondary { background-color: #065f46; color: #e2e8f0; border-radius: 10px; padding: 10px 16px; font-weight: 500; }
-        .btn-secondary:active { background-color: #047857; }
-        .modal { position: fixed; inset: 0; background-color: rgba(2, 44, 34, 0.9); z-index: 100; display: none; align-items: center; justify-content: center; padding: 16px; }
+        .btn-primary { background-color: #10b981; color: #022c22; font-weight: bold; border-radius: 10px; padding: 10px 20px; width: 100%; }
+        .btn-secondary { background-color: #064e3b; color: #e2e8f0; border-radius: 10px; padding: 10px 16px; font-weight: 500; }
+        .btn-danger { background-color: #7f1d1d; color: #fca5a5; border-radius: 8px; padding: 6px 10px; font-size: 12px; font-weight: bold; }
+        .modal { position: fixed; inset: 0; background-color: rgba(2, 44, 34, 0.95); z-index: 100; display: none; align-items: center; justify-content: center; padding: 16px; }
         .modal.active { display: flex; }
         .modal-content { background-color: #064e3b; border: 1px solid #065f46; border-radius: 20px; width: 100%; max-width: 600px; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; }
         .list-item { background-color: #022c22; border: 1px solid #065f46; border-radius: 10px; padding: 12px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-        .badge { background-color: #065f46; color: #cbd5e1; font-size: 12px; padding: 4px 8px; border-radius: 6px; }
     </style>
 </head>
 <body>
-    <!-- Header -->
     <header>
         <div style="max-width: 800px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 12px;">
             <div style="display: flex; align-items: center; gap: 8px;">
@@ -41,62 +38,103 @@
         </div>
     </header>
 
-    <!-- Main Container -->
     <div class="container">
-        
-        <!-- Manual Quick Search Card -->
+        <!-- Busca de Bairro -->
         <div class="card">
             <h3 style="font-size: 12px; text-transform: uppercase; color: #6ee7b7; margin-bottom: 8px; letter-spacing: 1px;">Adição Manual / Busca de Bairro</h3>
             <div style="position: relative;">
                 <input type="text" id="searchBox" placeholder="Pesquisar bairro ou cidade..." oninput="filterNeighborhoods()">
             </div>
-            <div id="searchResults" style="margin-top: 8px; max-height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; display: none;"></div>
+            <div id="searchResults" style="margin-top: 8px; max-height: 180px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; display: none;"></div>
             <div style="margin-top: 12px; display: flex; justify-content: space-between; align-items: center; font-size: 12px;">
-                <span style="color: #94a3b8;">💡 Digite para filtrar instantaneamente</span>
+                <span style="color: #94a3b8;">💡 Digite para filtrar bairros</span>
                 <button onclick="openCustomModal()" style="background: none; color: #34d399; text-decoration: underline; font-weight: bold;">+ Outro valor</button>
             </div>
         </div>
 
-        <!-- Daily Summary Cards -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-            <div class="card" style="padding: 14px;">
-                <span style="font-size: 11px; color: #94a3b8; text-transform: uppercase; font-weight: bold;">Total do Dia</span>
-                <h2 id="totalAmount" style="font-size: 22px; font-weight: bold; color: #34d399; margin-top: 4px;">R$ 0,00</h2>
+        <!-- Resumo Financeiro -->
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+            <div class="card" style="padding: 12px;">
+                <span style="font-size: 10px; color: #94a3b8; text-transform: uppercase; font-weight: bold;">Ganho</span>
+                <h2 id="totalAmount" style="font-size: 17px; font-weight: bold; color: #34d399; margin-top: 4px;">R$ 0,00</h2>
             </div>
-            <div class="card" style="padding: 14px;">
-                <span style="font-size: 11px; color: #94a3b8; text-transform: uppercase; font-weight: bold;">Total Entregas</span>
-                <h2 id="totalCount" style="font-size: 22px; font-weight: bold; color: #60a5fa; margin-top: 4px;">0</h2>
+            <div class="card" style="padding: 12px; cursor: pointer;" onclick="openExpensesModal()">
+                <span style="font-size: 10px; color: #f87171; text-transform: uppercase; font-weight: bold;">Gastos ⚙️</span>
+                <h2 id="totalExpenses" style="font-size: 17px; font-weight: bold; color: #f87171; margin-top: 4px;">R$ 0,00</h2>
+            </div>
+            <div class="card" style="padding: 12px;">
+                <span style="font-size: 10px; color: #94a3b8; text-transform: uppercase; font-weight: bold;">Lucro</span>
+                <h2 id="totalProfit" style="font-size: 17px; font-weight: bold; color: #60a5fa; margin-top: 4px;">R$ 0,00</h2>
             </div>
         </div>
 
-        <!-- Today's Deliveries List -->
+        <!-- Lista de Entregas -->
         <div class="card" style="flex: 1; display: flex; flex-direction: column;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid #065f46; padding-bottom: 8px;">
-                <h3 style="font-size: 15px; font-weight: bold;">📋 Entregas do Dia</h3>
+                <h3 style="font-size: 15px; font-weight: bold;">📋 Entregas do Dia (<span id="totalCount">0</span>)</h3>
                 <button onclick="clearToday()" style="background: none; color: #f87171; font-size: 12px; font-weight: bold; cursor: pointer;">Limpar Dia</button>
             </div>
-            <div id="deliveriesList" style="display: flex; flex-direction: column; gap: 8px; overflow-y: auto; max-height: 380px;">
+            <div id="deliveriesList" style="display: flex; flex-direction: column; gap: 8px; overflow-y: auto; max-height: 350px;">
                 <div style="text-align: center; color: #94a3b8; padding: 30px 0;">Nenhuma entrega registrada hoje.</div>
             </div>
         </div>
     </div>
 
-    <!-- History Modal -->
+    <!-- Modal de Gastos -->
+    <div id="expensesModal" class="modal">
+        <div class="modal-content" style="max-width: 450px;">
+            <div style="padding: 16px; background-color: #022c22; border-bottom: 1px solid #065f46; display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="font-size: 16px; font-weight: bold;">💸 Gerenciar Gastos do Dia</h3>
+                <button onclick="closeExpensesModal()" style="background: none; color: #fff; font-size: 18px; padding: 4px 8px;">✕</button>
+            </div>
+            <div style="padding: 16px; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; max-height: 60vh;">
+                <div style="display: flex; flex-direction: column; gap: 8px; background: #022c22; padding: 12px; border-radius: 10px; border: 1px solid #065f46;">
+                    <div>
+                        <label style="font-size: 11px; color: #cbd5e1; text-transform: uppercase; font-weight: bold; display: block; margin-bottom: 4px;">Descrição (Ex: Gasolina)</label>
+                        <input type="text" id="expenseDesc" placeholder="Ex: Gasolina">
+                    </div>
+                    <div>
+                        <label style="font-size: 11px; color: #cbd5e1; text-transform: uppercase; font-weight: bold; display: block; margin-bottom: 4px;">Valor (R$)</label>
+                        <input type="number" step="0.01" id="expenseVal" placeholder="0.00">
+                    </div>
+                    <button onclick="addExpense()" class="btn-primary" style="margin-top: 4px;">Adicionar Gasto</button>
+                </div>
+                <div>
+                    <h4 style="font-size: 12px; text-transform: uppercase; color: #f87171; margin-bottom: 8px; letter-spacing: 1px;">Gastos de Hoje</h4>
+                    <div id="expensesListContainer" style="display: flex; flex-direction: column; gap: 6px;">
+                        <span style="font-size: 13px; color: #94a3b8;">Nenhum gasto registrado.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Histórico -->
     <div id="historyModal" class="modal">
         <div class="modal-content">
             <div style="padding: 16px; background-color: #022c22; border-bottom: 1px solid #065f46; display: flex; justify-content: space-between; align-items: center;">
-                <h3 style="font-size: 16px; font-weight: bold;">📈 Histórico e Faturamento</h3>
+                <h3 style="font-size: 16px; font-weight: bold;">📈 Histórico Financeiro</h3>
                 <button onclick="closeHistory()" style="background: none; color: #fff; font-size: 18px; padding: 4px 8px;">✕</button>
             </div>
             <div style="padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; flex: 1;">
-                <div style="background-color: #022c22; border: 1px solid #065f46; border-radius: 12px; padding: 14px; display: flex; justify-content: space-between; align-items: center;">
+                <div style="background-color: #022c22; border: 1px solid #065f46; border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 8px;">
                     <div>
                         <span style="font-size: 11px; color: #94a3b8; text-transform: uppercase; font-weight: bold;">Resumo da Semana Atual</span>
                         <h4 id="weekRangeLabel" style="font-size: 13px; color: #e2e8f0; margin-top: 2px;">De -- até --</h4>
                     </div>
-                    <div style="text-align: right;">
-                        <span id="weekTotalAmount" style="font-size: 18px; font-weight: bold; color: #34d399;">R$ 0,00</span>
-                        <p id="weekTotalCount" style="font-size: 11px; color: #94a3b8;">0 entregas</p>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 4px; text-align: center; background: #064e3b; padding: 10px; border-radius: 8px;">
+                        <div>
+                            <span style="font-size: 9px; color: #94a3b8; display: block;">Ganho</span>
+                            <strong id="weekGain" style="font-size: 13px; color: #34d399;">R$ 0,00</strong>
+                        </div>
+                        <div>
+                            <span style="font-size: 9px; color: #94a3b8; display: block;">Gasto</span>
+                            <strong id="weekExpense" style="font-size: 13px; color: #f87171;">R$ 0,00</strong>
+                        </div>
+                        <div>
+                            <span style="font-size: 9px; color: #94a3b8; display: block;">Lucro</span>
+                            <strong id="weekProfit" style="font-size: 13px; color: #60a5fa;">R$ 0,00</strong>
+                        </div>
                     </div>
                 </div>
                 <div>
@@ -107,7 +145,7 @@
         </div>
     </div>
 
-    <!-- Custom Value Modal -->
+    <!-- Modal Personalizado -->
     <div id="customModal" class="modal">
         <div class="modal-content" style="max-width: 400px; padding: 20px;">
             <h3 style="font-size: 16px; font-weight: bold; margin-bottom: 16px;">➕ Entrega Personalizada</h3>
@@ -123,7 +161,7 @@
             </div>
             <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px;">
                 <button onclick="closeCustomModal()" class="btn-secondary">Cancelar</button>
-                <button onclick="saveCustomDelivery()" class="btn-primary">Adicionar</button>
+                <button onclick="saveCustomDelivery()" class="btn-primary" style="width: auto; padding: 10px 20px;">Adicionar</button>
             </div>
         </div>
     </div>
@@ -244,188 +282,4 @@
             { name: "Vendaval", price: 13.00, city: "Biguaçu" }
         ];
 
-        let selectedDateStr = new Date().toISOString().split('T')[0];
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const dateInput = document.getElementById('currentDate');
-            dateInput.value = selectedDateStr;
-            dateInput.addEventListener('change', (e) => {
-                selectedDateStr = e.target.value;
-                renderDeliveries();
-            });
-            renderDeliveries();
-        });
-
-        function getData() {
-            try {
-                return JSON.parse(localStorage.getItem('delivery_app_data')) || {};
-            } catch(e) { return {}; }
-        }
-
-        function saveData(data) {
-            localStorage.setItem('delivery_app_data', JSON.stringify(data));
-        }
-
-        function addDelivery(name, price, countToAdd = 1) {
-            const data = getData();
-            if (!data[selectedDateStr]) data[selectedDateStr] = [];
-            const existing = data[selectedDateStr].find(item => item.name.toLowerCase() === name.toLowerCase());
-            if (existing) {
-                existing.count += countToAdd;
-                if (existing.count <= 0) {
-                    data[selectedDateStr] = data[selectedDateStr].filter(item => item.name.toLowerCase() !== name.toLowerCase());
-                }
-            } else if (countToAdd > 0) {
-                data[selectedDateStr].push({ name, price, count: countToAdd });
-            }
-            saveData(data);
-            renderDeliveries();
-        }
-
-        function changeCount(name, delta) {
-            const data = getData();
-            if (!data[selectedDateStr]) return;
-            const existing = data[selectedDateStr].find(item => item.name.toLowerCase() === name.toLowerCase());
-            if (existing) {
-                existing.count += delta;
-                if (existing.count <= 0) {
-                    data[selectedDateStr] = data[selectedDateStr].filter(item => item.name.toLowerCase() !== name.toLowerCase());
-                }
-                saveData(data);
-                renderDeliveries();
-            }
-        }
-
-        function clearToday() {
-            if (!confirm("Deseja limpar as entregas desta data?")) return;
-            const data = getData();
-            delete data[selectedDateStr];
-            saveData(data);
-            renderDeliveries();
-        }
-
-        function renderDeliveries() {
-            const data = getData();
-            const list = data[selectedDateStr] || [];
-            const container = document.getElementById('deliveriesList');
-            let totalAmount = 0, totalCount = 0;
-
-            if (list.length === 0) {
-                container.innerHTML = `<div style="text-align: center; color: #94a3b8; padding: 30px 0;">Nenhuma entrega registrada hoje.</div>`;
-            } else {
-                container.innerHTML = list.map(item => {
-                    totalAmount += (item.price * item.count);
-                    totalCount += item.count;
-                    return `
-                        <div class="list-item">
-                            <div>
-                                <strong style="font-size: 14px; display: block;">${item.name}</strong>
-                                <span style="font-size: 11px; color: #94a3b8;">R$ ${item.price.toFixed(2)} cada</span>
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <div style="display: flex; background: #064e3b; border-radius: 8px; overflow: hidden; border: 1px solid #065f46;">
-                                    <button onclick="changeCount('${item.name.replace(/'/g, "\\'")}', -1)" style="background:none; color:#fff; padding:6px 12px; cursor:pointer;">-</button>
-                                    <span style="padding: 6px 10px; font-weight: bold; color: #34d399;">${item.count}</span>
-                                    <button onclick="changeCount('${item.name.replace(/'/g, "\\'")}', 1)" style="background:none; color:#fff; padding:6px 12px; cursor:pointer;">+</button>
-                                </div>
-                                <span style="font-weight: bold; min-width: 65px; text-align: right;">R$ ${(item.price * item.count).toFixed(2)}</span>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            }
-            document.getElementById('totalAmount').innerText = `R$ ${totalAmount.toFixed(2)}`;
-            document.getElementById('totalCount').innerText = totalCount;
-        }
-
-        function filterNeighborhoods() {
-            const query = document.getElementById('searchBox').value.toLowerCase().trim();
-            const resultsContainer = document.getElementById('searchResults');
-            if (!query) {
-                resultsContainer.style.display = 'none';
-                resultsContainer.innerHTML = '';
-                return;
-            }
-            const matches = deliveryTable.filter(item => item.name.toLowerCase().includes(query) || item.city.toLowerCase().includes(query)).slice(0, 6);
-            if (matches.length === 0) {
-                resultsContainer.innerHTML = `<div style="padding: 8px; font-size: 12px; color: #94a3b8; text-align: center;">Bairro não encontrado. <a href="javascript:void(0)" onclick="openCustomModal()" style="color:#34d399;">Criar personalizado</a></div>`;
-                resultsContainer.style.display = 'block';
-                return;
-            }
-            resultsContainer.innerHTML = matches.map(m => `
-                <button onclick="selectNeighborhood('${m.name.replace(/'/g, "\\'")}', ${m.price})" style="width: 100%; text-align: left; padding: 10px; background: #022c22; border: 1px solid #065f46; border-radius: 8px; color: #fff; display: flex; justify-content: space-between; cursor: pointer;">
-                    <span>${m.name} <span style="font-size: 11px; color: #94a3b8;">(${m.city})</span></span>
-                    <strong style="color: #34d399;">R$ ${m.price.toFixed(2)}</strong>
-                </button>
-            `).join('');
-            resultsContainer.style.display = 'block';
-        }
-
-        function selectNeighborhood(name, price) {
-            addDelivery(name, price, 1);
-            document.getElementById('searchBox').value = '';
-            document.getElementById('searchResults').style.display = 'none';
-            document.getElementById('searchResults').innerHTML = '';
-        }
-
-        function openCustomModal() { document.getElementById('customModal').classList.add('active'); }
-        function closeCustomModal() { document.getElementById('customModal').classList.remove('active'); }
-        function saveCustomDelivery() {
-            const name = document.getElementById('customName').value.trim();
-            const price = parseFloat(document.getElementById('customPrice').value);
-            if (!name || isNaN(price)) { alert("Insira nome e valor válidos."); return; }
-            addDelivery(name, price, 1);
-            closeCustomModal();
-        }
-
-        function openHistory() {
-            const data = getData();
-            const container = document.getElementById('historyListContainer');
-            const dates = Object.keys(data).sort().reverse();
-            let weekTotalAmount = 0, weekTotalCount = 0;
-            
-            const now = new Date();
-            const monday = new Date(now);
-            monday.setDate(now.getDate() - (now.getDay() === 0 ? 6 : now.getDay() - 1));
-            monday.setHours(0,0,0,0);
-            const sunday = new Date(monday);
-            sunday.setDate(monday.getDate() + 6);
-
-            document.getElementById('weekRangeLabel').innerText = `${monday.toLocaleDateString('pt-BR')} até ${sunday.toLocaleDateString('pt-BR')}`;
-
-            dates.forEach(dateStr => {
-                const itemDate = new Date(dateStr + 'T00:00:00');
-                if (itemDate >= monday && itemDate <= sunday) {
-                    data[dateStr].forEach(i => { weekTotalAmount += (i.price * i.count); weekTotalCount += i.count; });
-                }
-            });
-
-            document.getElementById('weekTotalAmount').innerText = `R$ ${weekTotalAmount.toFixed(2)}`;
-            document.getElementById('weekTotalCount').innerText = `${weekTotalCount} entregas`;
-
-            if (dates.length === 0) {
-                container.innerHTML = `<p style="color:#94a3b8; font-size:13px; text-align:center;">Sem histórico registado.</p>`;
-            } else {
-                container.innerHTML = dates.map(dateStr => {
-                    const list = data[dateStr];
-                    let dayAmount = 0, dayCount = 0;
-                    list.forEach(i => { dayAmount += (i.price * i.count); dayCount += i.count; });
-                    return `
-                        <div style="background: #022c22; border: 1px solid #065f46; border-radius: 10px; padding: 12px;">
-                            <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #065f46; padding-bottom: 6px; margin-bottom: 8px;">
-                                <strong style="color: #34d399;">${dateStr}</strong>
-                                <span>R$ ${dayAmount.toFixed(2)} (${dayCount}x)</span>
-                            </div>
-                            <div style="display: flex; flex-wrap: wrap; gap: 4px;">
-                                ${list.map(i => `<span class="badge">${i.name} (${i.count}x)</span>`).join('')}
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            }
-            document.getElementById('historyModal').classList.add('active');
-        }
-        function closeHistory() { document.getElementById('historyModal').classList.remove('active'); }
-    </script>
-</body>
-</html>
+        let selectedDateStr = new Date().
