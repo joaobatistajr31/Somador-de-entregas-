@@ -5,161 +5,125 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Taxas de Entrega JC</title>
     <link rel="manifest" href="manifest.json">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+        body { background-color: #052e16; color: #f1f5f9; min-height: 100vh; display: flex; flex-direction: column; }
+        header { background-color: #064e3b; border-bottom: 1px solid #065f46; padding: 16px; position: sticky; top: 0; z-index: 50; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .container { max-width: 800px; width: 100%; margin: 0 auto; padding: 16px; display: flex; flex-direction: column; gap: 20px; flex: 1; }
+        .card { background-color: rgba(6, 78, 59, 0.8); border: 1px solid #065f46; border-radius: 16px; padding: 20px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); }
+        input, button { font-size: 16px; }
+        input[type="text"], input[type="number"], input[type="date"] { width: 100%; background-color: #022c22; border: 1px solid #065f46; border-radius: 10px; padding: 12px; color: #f1f5f9; outline: none; }
+        input:focus { border-color: #10b981; }
+        button { cursor: pointer; border: none; transition: 0.2s; }
+        .btn-primary { background-color: #10b981; color: #022c22; font-weight: bold; border-radius: 10px; padding: 10px 20px; }
+        .btn-primary:active { transform: scale(0.95); }
+        .btn-secondary { background-color: #065f46; color: #e2e8f0; border-radius: 10px; padding: 10px 16px; font-weight: 500; }
+        .btn-secondary:active { background-color: #047857; }
+        .modal { position: fixed; inset: 0; background-color: rgba(2, 44, 34, 0.9); z-index: 100; display: none; align-items: center; justify-content: center; padding: 16px; }
+        .modal.active { display: flex; }
+        .modal-content { background-color: #064e3b; border: 1px solid #065f46; border-radius: 20px; width: 100%; max-width: 600px; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; }
+        .list-item { background-color: #022c22; border: 1px solid #065f46; border-radius: 10px; padding: 12px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+        .badge { background-color: #065f46; color: #cbd5e1; font-size: 12px; padding: 4px 8px; border-radius: 6px; }
+    </style>
 </head>
-<body class="bg-green-950 text-slate-100 min-h-screen flex flex-col font-sans select-none">
+<body>
     <!-- Header -->
-    <header class="bg-green-900 border-b border-green-800 p-4 sticky top-0 z-50 shadow-md">
-        <div class="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div class="flex items-center gap-2">
-                <i class="fa-solid fa-motorcycle text-emerald-400 text-2xl"></i>
-                <h1 class="text-xl font-bold tracking-wide">Taxas de Entrega JC</h1>
+    <header>
+        <div style="max-width: 800px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 24px;">🛵</span>
+                <h1 style="font-size: 18px; font-weight: bold;">Taxas de Entrega JC</h1>
             </div>
-            <div class="flex items-center gap-3">
-                <div class="flex items-center gap-2 bg-green-800/80 px-3 py-1.5 rounded-lg border border-green-700">
-                    <i class="fa-regular fa-calendar text-emerald-400"></i>
-                    <input type="date" id="currentDate" class="bg-transparent text-slate-100 font-medium focus:outline-none cursor-pointer">
-                </div>
-                <button onclick="openHistory()" class="bg-green-800 hover:bg-green-700 active:bg-green-600 text-slate-200 px-3.5 py-1.5 rounded-lg font-medium text-sm transition flex items-center gap-2 border border-green-700">
-                    <i class="fa-solid fa-clock-rotate-left"></i> Histórico
-                </button>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <input type="date" id="currentDate" style="width: auto; padding: 8px 12px; cursor: pointer;">
+                <button onclick="openHistory()" class="btn-secondary">📅 Histórico</button>
             </div>
         </div>
     </header>
 
     <!-- Main Container -->
-    <main class="flex-1 max-w-4xl w-full mx-auto p-4 flex flex-col gap-6">
+    <div class="container">
         
-        <!-- Controls & Voice & Quick Add -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <!-- Voice Recognition Card -->
-            <div class="bg-green-900/80 border border-green-800 rounded-2xl p-5 flex flex-col items-center justify-center text-center shadow-lg relative overflow-hidden">
-                <div class="absolute -right-6 -bottom-6 text-green-800/30 text-8xl pointer-events-none">
-                    <i class="fa-solid fa-microphone"></i>
-                </div>
-                <h2 class="text-sm font-semibold text-emerald-300 uppercase tracking-wider mb-2">Comando por Voz</h2>
-                <button id="micBtn" onclick="toggleSpeech()" class="w-16 h-16 rounded-full bg-emerald-500 hover:bg-emerald-400 active:scale-90 text-slate-950 flex items-center justify-center text-2xl shadow-lg shadow-emerald-500/30 transition transform mb-3">
-                    <i id="micIcon" class="fa-solid fa-microphone"></i>
-                </button>
-                <p id="speechStatus" class="text-sm text-slate-300 font-medium h-6">Toque para falar (ex: "uma Forquilhinha")</p>
+        <!-- Manual Quick Search Card -->
+        <div class="card">
+            <h3 style="font-size: 12px; text-transform: uppercase; color: #6ee7b7; margin-bottom: 8px; letter-spacing: 1px;">Adição Manual / Busca de Bairro</h3>
+            <div style="position: relative;">
+                <input type="text" id="searchBox" placeholder="Pesquisar bairro ou cidade..." oninput="filterNeighborhoods()">
             </div>
-
-            <!-- Manual Quick Search Card -->
-            <div class="bg-green-900/80 border border-green-800 rounded-2xl p-5 flex flex-col justify-between shadow-lg">
-                <div>
-                    <h2 class="text-sm font-semibold text-emerald-300 uppercase tracking-wider mb-2">Adição Manual / Busca</h2>
-                    <div class="relative">
-                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400"></i>
-                        <input type="text" id="searchBox" placeholder="Pesquisar bairro ou cidade..." oninput="filterNeighborhoods()" class="w-full bg-green-950 border border-green-800 rounded-xl pl-10 pr-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition">
-                    </div>
-                </div>
-                <div id="searchResults" class="mt-2 max-h-36 overflow-y-auto flex flex-col gap-1 pr-1 hidden custom-scrollbar"></div>
-                <div class="mt-3 flex items-center justify-between text-xs text-slate-400">
-                    <span>💡 Digite para filtrar bairros instantaneamente</span>
-                    <button onclick="openCustomModal()" class="text-emerald-400 hover:underline font-medium">Outro valor?</button>
-                </div>
+            <div id="searchResults" style="margin-top: 8px; max-height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; display: none;"></div>
+            <div style="margin-top: 12px; display: flex; justify-content: space-between; align-items: center; font-size: 12px;">
+                <span style="color: #94a3b8;">💡 Digite para filtrar instantaneamente</span>
+                <button onclick="openCustomModal()" style="background: none; color: #34d399; text-decoration: underline; font-weight: bold;">+ Outro valor</button>
             </div>
         </div>
 
         <!-- Daily Summary Cards -->
-        <div class="grid grid-cols-2 gap-4">
-            <div class="bg-green-900/80 border border-green-800 rounded-2xl p-4 flex items-center gap-4 shadow-md">
-                <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-xl">
-                    <i class="fa-solid fa-wallet"></i>
-                </div>
-                <div>
-                    <span class="text-xs text-slate-400 uppercase tracking-wider font-medium">Total do Dia</span>
-                    <h2 id="totalAmount" class="text-2xl font-bold text-emerald-400">R$ 0,00</h2>
-                </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="card" style="padding: 14px;">
+                <span style="font-size: 11px; color: #94a3b8; text-transform: uppercase; font-weight: bold;">Total do Dia</span>
+                <h2 id="totalAmount" style="font-size: 22px; font-weight: bold; color: #34d399; margin-top: 4px;">R$ 0,00</h2>
             </div>
-            <div class="bg-green-900/80 border border-green-800 rounded-2xl p-4 flex items-center gap-4 shadow-md">
-                <div class="w-12 h-12 rounded-xl bg-blue-500/15 text-blue-400 flex items-center justify-center text-xl">
-                    <i class="fa-solid fa-box"></i>
-                </div>
-                <div>
-                    <span class="text-xs text-slate-400 uppercase tracking-wider font-medium">Total de Entregas</span>
-                    <h2 id="totalCount" class="text-2xl font-bold text-blue-400">0</h2>
-                </div>
+            <div class="card" style="padding: 14px;">
+                <span style="font-size: 11px; color: #94a3b8; text-transform: uppercase; font-weight: bold;">Total Entregas</span>
+                <h2 id="totalCount" style="font-size: 22px; font-weight: bold; color: #60a5fa; margin-top: 4px;">0</h2>
             </div>
         </div>
 
         <!-- Today's Deliveries List -->
-        <div class="bg-green-900/80 border border-green-800 rounded-2xl p-5 shadow-lg flex-1 flex flex-col">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="font-bold text-slate-200 text-lg flex items-center gap-2">
-                    <i class="fa-solid fa-list-check text-emerald-400"></i> Entregas do Dia
-                </h3>
-                <button onclick="clearToday()" class="text-xs text-red-400 hover:text-red-300 font-medium transition flex items-center gap-1">
-                    <i class="fa-solid fa-trash-can"></i> Limpar Dia
-                </button>
+        <div class="card" style="flex: 1; display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid #065f46; padding-bottom: 8px;">
+                <h3 style="font-size: 15px; font-weight: bold;">📋 Entregas do Dia</h3>
+                <button onclick="clearToday()" style="background: none; color: #f87171; font-size: 12px; font-weight: bold; cursor: pointer;">Limpar Dia</button>
             </div>
-
-            <div id="deliveriesList" class="flex flex-col gap-2.5 overflow-y-auto max-h-[380px] pr-1">
-                <div class="text-center py-10 text-slate-400 flex flex-col items-center gap-2">
-                    <i class="fa-solid fa-folder-open text-3xl"></i>
-                    <p>Nenhuma entrega registrada para esta data.</p>
-                </div>
+            <div id="deliveriesList" style="display: flex; flex-direction: column; gap: 8px; overflow-y: auto; max-height: 380px;">
+                <div style="text-align: center; color: #94a3b8; padding: 30px 0;">Nenhuma entrega registrada hoje.</div>
             </div>
         </div>
-    </main>
+    </div>
 
     <!-- History Modal -->
-    <div id="historyModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-green-900 border border-green-800 rounded-3xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
-            <div class="p-5 border-b border-green-800 flex items-center justify-between bg-green-950">
-                <h3 class="text-lg font-bold text-slate-100 flex items-center gap-2">
-                    <i class="fa-solid fa-chart-line text-emerald-400"></i> Histórico de Entregas e Faturamento
-                </h3>
-                <button onclick="closeHistory()" class="w-8 h-8 rounded-full bg-green-800 hover:bg-green-700 flex items-center justify-center text-slate-300 transition">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
+    <div id="historyModal" class="modal">
+        <div class="modal-content">
+            <div style="padding: 16px; background-color: #022c22; border-bottom: 1px solid #065f46; display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="font-size: 16px; font-weight: bold;">📈 Histórico e Faturamento</h3>
+                <button onclick="closeHistory()" style="background: none; color: #fff; font-size: 18px; padding: 4px 8px;">✕</button>
             </div>
-            
-            <div class="p-5 overflow-y-auto flex-1 flex flex-col gap-6">
-                <div class="bg-green-950 border border-emerald-500/30 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-lg">
-                            <i class="fa-solid fa-calendar-week"></i>
-                        </div>
-                        <div>
-                            <span class="text-xs text-slate-400 uppercase font-semibold">Resumo da Semana Atual</span>
-                            <h4 id="weekRangeLabel" class="text-sm font-medium text-slate-200">De -- até --</h4>
-                        </div>
+            <div style="padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; flex: 1;">
+                <div style="background-color: #022c22; border: 1px solid #065f46; border-radius: 12px; padding: 14px; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <span style="font-size: 11px; color: #94a3b8; text-transform: uppercase; font-weight: bold;">Resumo da Semana Atual</span>
+                        <h4 id="weekRangeLabel" style="font-size: 13px; color: #e2e8f0; margin-top: 2px;">De -- até --</h4>
                     </div>
-                    <div class="text-right">
-                        <span id="weekTotalAmount" class="text-xl font-bold text-emerald-400">R$ 0,00</span>
-                        <p id="weekTotalCount" class="text-xs text-slate-400 font-medium">0 entregas</p>
+                    <div style="text-align: right;">
+                        <span id="weekTotalAmount" style="font-size: 18px; font-weight: bold; color: #34d399;">R$ 0,00</span>
+                        <p id="weekTotalCount" style="font-size: 11px; color: #94a3b8;">0 entregas</p>
                     </div>
                 </div>
-
                 <div>
-                    <h4 class="text-sm font-semibold text-emerald-300 uppercase tracking-wider mb-3">Dias Anteriores / Registrados</h4>
-                    <div id="historyListContainer" class="flex flex-col gap-3"></div>
+                    <h4 style="font-size: 12px; text-transform: uppercase; color: #6ee7b7; margin-bottom: 8px; letter-spacing: 1px;">Dias Registrados</h4>
+                    <div id="historyListContainer" style="display: flex; flex-direction: column; gap: 8px;"></div>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Custom Value Modal -->
-    <div id="customModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-green-900 border border-green-800 rounded-3xl w-full max-w-md p-6 shadow-2xl flex flex-col gap-4">
-            <h3 class="text-lg font-bold text-slate-100 flex items-center gap-2">
-                <i class="fa-solid fa-circle-plus text-emerald-400"></i> Adicionar Entrega Personalizada
-            </h3>
-            <div class="flex flex-col gap-3">
+    <div id="customModal" class="modal">
+        <div class="modal-content" style="max-width: 400px; padding: 20px;">
+            <h3 style="font-size: 16px; font-weight: bold; margin-bottom: 16px;">➕ Entrega Personalizada</h3>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
                 <div>
-                    <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1 block">Nome / Bairro</label>
-                    <input type="text" id="customName" placeholder="Ex: Bairro Especial" class="w-full bg-green-950 border border-green-800 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500">
+                    <label style="font-size: 11px; color: #cbd5e1; text-transform: uppercase; font-weight: bold; display: block; margin-bottom: 4px;">Nome / Bairro</label>
+                    <input type="text" id="customName" placeholder="Ex: Local especial">
                 </div>
                 <div>
-                    <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1 block">Valor da Taxa (R$)</label>
-                    <input type="number" step="0.01" id="customPrice" placeholder="0.00" class="w-full bg-green-950 border border-green-800 rounded-xl px-4 py-2.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500">
+                    <label style="font-size: 11px; color: #cbd5e1; text-transform: uppercase; font-weight: bold; display: block; margin-bottom: 4px;">Valor (R$)</label>
+                    <input type="number" step="0.01" id="customPrice" placeholder="0.00">
                 </div>
             </div>
-            <div class="flex items-center justify-end gap-3 mt-2">
-                <button onclick="closeCustomModal()" class="px-4 py-2 rounded-xl bg-green-800 hover:bg-green-700 text-slate-300 font-medium text-sm transition">Cancelar</button>
-                <button onclick="saveCustomDelivery()" class="px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm transition shadow-lg shadow-emerald-500/20">Adicionar</button>
+            <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px;">
+                <button onclick="closeCustomModal()" class="btn-secondary">Cancelar</button>
+                <button onclick="saveCustomDelivery()" class="btn-primary">Adicionar</button>
             </div>
         </div>
     </div>
@@ -280,13 +244,7 @@
             { name: "Vendaval", price: 13.00, city: "Biguaçu" }
         ];
 
-        let selectedDateStr = getLocalDateString(new Date());
-        
-        function getLocalDateString(date) {
-            const offset = date.getTimezoneOffset();
-            const adjustedDate = new Date(date.getTime() - (offset*60*1000));
-            return adjustedDate.toISOString().split('T')[0];
-        }
+        let selectedDateStr = new Date().toISOString().split('T')[0];
 
         document.addEventListener('DOMContentLoaded', () => {
             const dateInput = document.getElementById('currentDate');
@@ -299,9 +257,9 @@
         });
 
         function getData() {
-            const dataStr = localStorage.getItem('delivery_app_data');
-            if (!dataStr) return {};
-            try { return JSON.parse(dataStr); } catch(e) { return {}; }
+            try {
+                return JSON.parse(localStorage.getItem('delivery_app_data')) || {};
+            } catch(e) { return {}; }
         }
 
         function saveData(data) {
@@ -310,9 +268,7 @@
 
         function addDelivery(name, price, countToAdd = 1) {
             const data = getData();
-            if (!data[selectedDateStr]) {
-                data[selectedDateStr] = [];
-            }
+            if (!data[selectedDateStr]) data[selectedDateStr] = [];
             const existing = data[selectedDateStr].find(item => item.name.toLowerCase() === name.toLowerCase());
             if (existing) {
                 existing.count += countToAdd;
@@ -341,7 +297,7 @@
         }
 
         function clearToday() {
-            if (!confirm("Deseja realmente limpar todas as entregas desta data?")) return;
+            if (!confirm("Deseja limpar as entregas desta data?")) return;
             const data = getData();
             delete data[selectedDateStr];
             saveData(data);
@@ -352,44 +308,32 @@
             const data = getData();
             const list = data[selectedDateStr] || [];
             const container = document.getElementById('deliveriesList');
-            
-            let totalAmount = 0;
-            let totalCount = 0;
+            let totalAmount = 0, totalCount = 0;
 
             if (list.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center py-10 text-slate-400 flex flex-col items-center gap-2">
-                        <i class="fa-solid fa-folder-open text-3xl"></i>
-                        <p>Nenhuma entrega registrada para esta data.</p>
-                    </div>
-                `;
+                container.innerHTML = `<div style="text-align: center; color: #94a3b8; padding: 30px 0;">Nenhuma entrega registrada hoje.</div>`;
             } else {
                 container.innerHTML = list.map(item => {
                     totalAmount += (item.price * item.count);
                     totalCount += item.count;
                     return `
-                        <div class="bg-green-950 border border-green-800/60 rounded-xl p-3 flex items-center justify-between gap-3">
+                        <div class="list-item">
                             <div>
-                                <h4 class="font-semibold text-slate-100">${item.name}</h4>
-                                <span class="text-xs text-slate-400">R$ ${item.price.toFixed(2)} cada</span>
+                                <strong style="font-size: 14px; display: block;">${item.name}</strong>
+                                <span style="font-size: 11px; color: #94a3b8;">R$ ${item.price.toFixed(2)} cada</span>
                             </div>
-                            <div class="flex items-center gap-3">
-                                <div class="flex items-center bg-green-900 border border-green-800 rounded-lg overflow-hidden">
-                                    <button onclick="changeCount('${item.name.replace(/'/g, "\\'")}', -1)" class="px-3 py-1.5 text-slate-300 hover:bg-green-800 active:bg-green-700 transition">
-                                        <i class="fa-solid fa-minus text-xs"></i>
-                                    </button>
-                                    <span class="px-3 text-sm font-bold text-emerald-400">${item.count}</span>
-                                    <button onclick="changeCount('${item.name.replace(/'/g, "\\'")}', 1)" class="px-3 py-1.5 text-slate-300 hover:bg-green-800 active:bg-green-700 transition">
-                                        <i class="fa-solid fa-plus text-xs"></i>
-                                    </button>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div style="display: flex; background: #064e3b; border-radius: 8px; overflow: hidden; border: 1px solid #065f46;">
+                                    <button onclick="changeCount('${item.name.replace(/'/g, "\\'")}', -1)" style="background:none; color:#fff; padding:6px 12px; cursor:pointer;">-</button>
+                                    <span style="padding: 6px 10px; font-weight: bold; color: #34d399;">${item.count}</span>
+                                    <button onclick="changeCount('${item.name.replace(/'/g, "\\'")}', 1)" style="background:none; color:#fff; padding:6px 12px; cursor:pointer;">+</button>
                                 </div>
-                                <span class="font-bold text-slate-200 min-w-[70px] text-right">R$ ${(item.price * item.count).toFixed(2)}</span>
+                                <span style="font-weight: bold; min-width: 65px; text-align: right;">R$ ${(item.price * item.count).toFixed(2)}</span>
                             </div>
                         </div>
                     `;
                 }).join('');
             }
-
             document.getElementById('totalAmount').innerText = `R$ ${totalAmount.toFixed(2)}`;
             document.getElementById('totalCount').innerText = totalCount;
         }
@@ -397,52 +341,39 @@
         function filterNeighborhoods() {
             const query = document.getElementById('searchBox').value.toLowerCase().trim();
             const resultsContainer = document.getElementById('searchResults');
-            
             if (!query) {
-                resultsContainer.classList.add('hidden');
+                resultsContainer.style.display = 'none';
                 resultsContainer.innerHTML = '';
                 return;
             }
-
             const matches = deliveryTable.filter(item => item.name.toLowerCase().includes(query) || item.city.toLowerCase().includes(query)).slice(0, 6);
-
             if (matches.length === 0) {
-                resultsContainer.innerHTML = `<div class="p-2.5 text-xs text-slate-400 text-center">Nenhum bairro encontrado. <button onclick="openCustomModal()" class="text-emerald-400 underline">Criar personalizado</button></div>`;
-                resultsContainer.classList.remove('hidden');
+                resultsContainer.innerHTML = `<div style="padding: 8px; font-size: 12px; color: #94a3b8; text-align: center;">Bairro não encontrado. <a href="javascript:void(0)" onclick="openCustomModal()" style="color:#34d399;">Criar personalizado</a></div>`;
+                resultsContainer.style.display = 'block';
                 return;
             }
-
             resultsContainer.innerHTML = matches.map(m => `
-                <button onclick="selectNeighborhood('${m.name.replace(/'/g, "\\'")}', ${m.price})" class="w-full text-left px-3.5 py-2.5 rounded-lg bg-green-950 hover:bg-green-800 flex items-center justify-between text-sm transition border border-green-800/50">
-                    <span class="font-medium text-slate-200">${m.name} <span class="text-xs text-slate-400">(${m.city})</span></span>
-                    <span class="font-bold text-emerald-400">R$ ${m.price.toFixed(2)}</span>
+                <button onclick="selectNeighborhood('${m.name.replace(/'/g, "\\'")}', ${m.price})" style="width: 100%; text-align: left; padding: 10px; background: #022c22; border: 1px solid #065f46; border-radius: 8px; color: #fff; display: flex; justify-content: space-between; cursor: pointer;">
+                    <span>${m.name} <span style="font-size: 11px; color: #94a3b8;">(${m.city})</span></span>
+                    <strong style="color: #34d399;">R$ ${m.price.toFixed(2)}</strong>
                 </button>
             `).join('');
-            resultsContainer.classList.remove('hidden');
+            resultsContainer.style.display = 'block';
         }
 
         function selectNeighborhood(name, price) {
             addDelivery(name, price, 1);
             document.getElementById('searchBox').value = '';
-            document.getElementById('searchResults').classList.add('hidden');
+            document.getElementById('searchResults').style.display = 'none';
             document.getElementById('searchResults').innerHTML = '';
         }
 
-        function openCustomModal() {
-            document.getElementById('customName').value = '';
-            document.getElementById('customPrice').value = '';
-            document.getElementById('customModal').classList.remove('hidden');
-        }
-        function closeCustomModal() {
-            document.getElementById('customModal').classList.add('hidden');
-        }
+        function openCustomModal() { document.getElementById('customModal').classList.add('active'); }
+        function closeCustomModal() { document.getElementById('customModal').classList.remove('active'); }
         function saveCustomDelivery() {
             const name = document.getElementById('customName').value.trim();
             const price = parseFloat(document.getElementById('customPrice').value);
-            if (!name || isNaN(price) || price < 0) {
-                alert("Por favor, insira um nome válido e um valor numérico.");
-                return;
-            }
+            if (!name || isNaN(price)) { alert("Insira nome e valor válidos."); return; }
             addDelivery(name, price, 1);
             closeCustomModal();
         }
@@ -451,30 +382,21 @@
             const data = getData();
             const container = document.getElementById('historyListContainer');
             const dates = Object.keys(data).sort().reverse();
-
-            let weekTotalAmount = 0;
-            let weekTotalCount = 0;
+            let weekTotalAmount = 0, weekTotalCount = 0;
             
             const now = new Date();
-            const currentDayOfWeek = now.getDay();
-            const mondayOffset = currentDayOfWeek === 0 ? -6 : 1 - currentDayOfWeek;
             const monday = new Date(now);
-            monday.setDate(now.getDate() + mondayOffset);
+            monday.setDate(now.getDate() - (now.getDay() === 0 ? 6 : now.getDay() - 1));
             monday.setHours(0,0,0,0);
-
             const sunday = new Date(monday);
             sunday.setDate(monday.getDate() + 6);
-            sunday.setHours(23,59,59,999);
 
             document.getElementById('weekRangeLabel').innerText = `${monday.toLocaleDateString('pt-BR')} até ${sunday.toLocaleDateString('pt-BR')}`;
 
             dates.forEach(dateStr => {
                 const itemDate = new Date(dateStr + 'T00:00:00');
                 if (itemDate >= monday && itemDate <= sunday) {
-                    data[dateStr].forEach(item => {
-                        weekTotalAmount += (item.price * item.count);
-                        weekTotalCount += item.count;
-                    });
+                    data[dateStr].forEach(i => { weekTotalAmount += (i.price * i.count); weekTotalCount += i.count; });
                 }
             });
 
@@ -482,145 +404,28 @@
             document.getElementById('weekTotalCount').innerText = `${weekTotalCount} entregas`;
 
             if (dates.length === 0) {
-                container.innerHTML = `<p class="text-slate-400 text-sm text-center py-4">Nenhum histórico registrado.</p>`;
+                container.innerHTML = `<p style="color:#94a3b8; font-size:13px; text-align:center;">Sem histórico registado.</p>`;
             } else {
                 container.innerHTML = dates.map(dateStr => {
                     const list = data[dateStr];
-                    let dayAmount = 0;
-                    let dayCount = 0;
-                    list.forEach(i => {
-                        dayAmount += (i.price * i.count);
-                        dayCount += i.count;
-                    });
-                    
-                    const formattedDate = new Date(dateStr + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' });
-
+                    let dayAmount = 0, dayCount = 0;
+                    list.forEach(i => { dayAmount += (i.price * i.count); dayCount += i.count; });
                     return `
-                        <div class="bg-green-950 border border-green-800 rounded-xl p-4 flex flex-col gap-3">
-                            <div class="flex items-center justify-between border-b border-green-900 pb-2">
-                                <span class="font-bold text-emerald-400 capitalize">${formattedDate}</span>
-                                <div class="text-right">
-                                    <span class="font-bold text-slate-100">R$ ${dayAmount.toFixed(2)}</span>
-                                    <span class="text-xs text-slate-400 ml-2">(${dayCount} entregas)</span>
-                                </div>
+                        <div style="background: #022c22; border: 1px solid #065f46; border-radius: 10px; padding: 12px;">
+                            <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #065f46; padding-bottom: 6px; margin-bottom: 8px;">
+                                <strong style="color: #34d399;">${dateStr}</strong>
+                                <span>R$ ${dayAmount.toFixed(2)} (${dayCount}x)</span>
                             </div>
-                            <div class="flex flex-wrap gap-1.5">
-                                ${list.map(i => `<span class="bg-green-900 text-slate-300 text-xs px-2.5 py-1 rounded-lg border border-green-800">${i.name} (${i.count}x)</span>`).join('')}
+                            <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                                ${list.map(i => `<span class="badge">${i.name} (${i.count}x)</span>`).join('')}
                             </div>
                         </div>
                     `;
                 }).join('');
             }
-
-            document.getElementById('historyModal').classList.remove('hidden');
+            document.getElementById('historyModal').classList.add('active');
         }
-
-        function closeHistory() {
-            document.getElementById('historyModal').classList.add('hidden');
-        }
-
-        let recognition = null;
-        let isListening = false;
-
-        // Suporte robusto para reconhecimento de voz em WebViews Android
-        try {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (SpeechRecognition) {
-                recognition = new SpeechRecognition();
-                recognition.lang = 'pt-BR';
-                recognition.continuous = false;
-                recognition.interimResults = false;
-
-                recognition.onstart = () => {
-                    isListening = true;
-                    document.getElementById('micBtn').classList.add('bg-red-500', 'animate-pulse');
-                    document.getElementById('micBtn').classList.remove('bg-emerald-500');
-                    document.getElementById('speechStatus').innerText = "Ouvindo... Fale o comando";
-                };
-
-                recognition.onresult = (event) => {
-                    const transcript = event.results[0][0].transcript.toLowerCase();
-                    document.getElementById('speechStatus').innerText = `Você disse: "${transcript}"`;
-                    processVoiceCommand(transcript);
-                };
-
-                recognition.onerror = (e) => {
-                    stopSpeech();
-                    document.getElementById('speechStatus').innerText = "Erro no microfone. Tente usar a busca manual.";
-                };
-
-                recognition.onend = () => {
-                    stopSpeech();
-                };
-            } else {
-                document.getElementById('speechStatus').innerText = "Voz não suportada neste dispositivo. Use a busca.";
-            }
-        } catch(err) {
-            console.log("Erro speech:", err);
-        }
-
-        function toggleSpeech() {
-            if (!recognition) {
-                alert("O reconhecimento de voz não está disponível neste aparelho. Utilize a busca manual.");
-                return;
-            }
-            if (isListening) {
-                recognition.stop();
-            } else {
-                try {
-                    recognition.start();
-                } catch(e) {
-                    recognition.stop();
-                    recognition.start();
-                }
-            }
-        }
-
-        function stopSpeech() {
-            isListening = false;
-            const btn = document.getElementById('micBtn');
-            btn.classList.remove('bg-red-500', 'animate-pulse');
-            btn.classList.add('bg-emerald-500');
-        }
-
-        function processVoiceCommand(text) {
-            let count = 1;
-            const numberWords = {
-                'uma': 1, 'um': 1, '1': 1,
-                'duas': 2, 'dois': 2, '2': 2,
-                'três': 3, '3': 3,
-                'quatro': 4, '4': 4,
-                'cinco': 5, '5': 5
-            };
-
-            for (let word in numberWords) {
-                if (text.includes(word)) {
-                    count = numberWords[word];
-                    break;
-                }
-            }
-
-            let cleaned = text
-                .replace(/acrescentar|adicionar|mais|uma|um|duas|dois|três|quatro|cinco/gi, '')
-                .trim();
-
-            if (!cleaned) {
-                document.getElementById('speechStatus').innerText = "Não entendi o bairro. Tente novamente.";
-                return;
-            }
-
-            let match = deliveryTable.find(item => item.name.toLowerCase() === cleaned);
-            if (!match) {
-                match = deliveryTable.find(item => item.name.toLowerCase().includes(cleaned) || cleaned.includes(item.name.toLowerCase()));
-            }
-
-            if (match) {
-                addDelivery(match.name, match.price, count);
-                document.getElementById('speechStatus').innerText = `Adicionado: ${count}x ${match.name} (R$ ${match.price.toFixed(2)})`;
-            } else {
-                document.getElementById('speechStatus').innerText = `Bairro "${cleaned}" não encontrado na tabela.`;
-            }
-        }
+        function closeHistory() { document.getElementById('historyModal').classList.remove('active'); }
     </script>
 </body>
 </html>
